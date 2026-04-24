@@ -419,10 +419,17 @@ These images already exist in `server/uploads/`, so you can show them in README 
 Preview:
 
 ![Landing Page](server/uploads/landingpage.png)
+
 ![Team Detail Page](server/uploads/teamdeatilpage.png)
+
 ![Add Member Page](server/uploads/addm.png)
+
 ![View Detail Page](server/uploads/temdee.png)
+
 ![Member Detail Page](server/uploads/memberdetailpage.png)
+
+![API JSON DATA](server/uploads/jsondata.jpg)
+
 
 ## Complete Running Order
 
