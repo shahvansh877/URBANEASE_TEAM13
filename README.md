@@ -420,8 +420,8 @@ Preview:
 
 ![Landing Page](server/uploads/landingpage.png)
 ![Team Detail Page](server/uploads/teamdeatilpage.png)
-![Add Member Page](server/uploads/addmember.png)
-![View Detail Page](server/uploads/viewdetailpage.png)
+![Add Member Page](server/uploads/addm.png)
+![View Detail Page](server/uploads/temdee.png)
 ![Member Detail Page](server/uploads/memberdetailpage.png)
 
 ## Complete Running Order
