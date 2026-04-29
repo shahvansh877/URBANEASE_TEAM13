@@ -26,34 +26,14 @@ import { MemberDetailsPage } from "./pages/MemberDetailsPage";
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center space-y-4">
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto"
-          style={{ background: "linear-gradient(135deg, #2563eb, #1d4ed8)" }}
-        >
-          <span style={{ color: "white", fontWeight: 700, fontSize: "1.2rem" }}>
-            U
-          </span>
+    <div className="app-loading-screen" aria-label="UrbanEase is loading">
+      <div className="app-loading-card">
+        <img className="app-loading-logo" src="/logo.jpg" alt="UrbanEase logo" />
+        <div>
+          <h1 className="app-loading-title">UrbanEase</h1>
+          <p className="app-loading-copy">Preparing your home services experience</p>
         </div>
-        <div className="flex items-center gap-2 text-gray-400 text-sm">
-          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8z"
-            />
-          </svg>
-          Loading...
-        </div>
+        <div className="app-loading-bar" aria-hidden="true" />
       </div>
     </div>
   );
