@@ -63,26 +63,6 @@ const generateOtp = () => {
   return crypto.randomInt(100000, 999999).toString();
 };
 
-const sendOtpWithoutBlockingTooLong = async (email, otp, roleLabel) => {
-  const sendPromise = sendOtpEmail(email, otp, roleLabel);
-  const timeoutPromise = new Promise((resolve) => {
-    setTimeout(() => resolve({ timedOut: true }), 3500);
-  });
-
-  const result = await Promise.race([
-    sendPromise.then(() => ({ sent: true })),
-    timeoutPromise,
-  ]);
-
-  if (result.timedOut) {
-    sendPromise.catch((error) => {
-      console.error(`OTP email failed for ${email}:`, error.message);
-    });
-  }
-
-  return result;
-};
-
 // ── Signup: User (Step 1 — send OTP) ─────────────────────
 router.post("/signup/user", async (req, res) => {
   try {
@@ -108,13 +88,11 @@ router.post("/signup/user", async (req, res) => {
       isEmailVerified: false,
     });
 
-    const emailResult = await sendOtpWithoutBlockingTooLong(email, otp, "User");
+    await sendOtpEmail(email, otp, "User");
 
     res.status(200).json({
       success: true,
-      message: emailResult.timedOut
-        ? "OTP is being sent to your email. Please check your inbox in a moment."
-        : "OTP sent to your email. Please verify to complete registration.",
+      message: "OTP sent to your email. Please verify to complete registration.",
       email,
       role: "user",
     });
@@ -150,13 +128,11 @@ router.post("/signup/provider", async (req, res) => {
       isEmailVerified: false,
     });
 
-    const emailResult = await sendOtpWithoutBlockingTooLong(email, otp, "Service Provider");
+    await sendOtpEmail(email, otp, "Service Provider");
 
     res.status(200).json({
       success: true,
-      message: emailResult.timedOut
-        ? "OTP is being sent to your email. Please check your inbox in a moment."
-        : "OTP sent to your email. Please verify to complete registration.",
+      message: "OTP sent to your email. Please verify to complete registration.",
       email,
       role: "serviceProvider",
     });
@@ -259,17 +235,41 @@ router.post("/resend-otp", async (req, res) => {
     await account.save({ validateBeforeSave: false });
 
     const roleLabel = role === "serviceProvider" ? "Service Provider" : "User";
-    const emailResult = await sendOtpWithoutBlockingTooLong(email, otp, roleLabel);
+    await sendOtpEmail(email, otp, roleLabel);
 
     res.status(200).json({
       success: true,
-      message: emailResult.timedOut
-        ? "New OTP is being sent to your email. Please check your inbox in a moment."
-        : "New OTP sent to your email.",
+      message: "New OTP sent to your email.",
     });
   } catch (error) {
     console.error("Resend OTP Error:", error);
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Development-only email delivery test
+router.post("/test-otp-email", async (req, res) => {
+  try {
+    if (process.env.NODE_ENV === "production") {
+      return res.status(404).json({ success: false, message: "Route not found" });
+    }
+
+    const email = req.body.email?.trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const otp = generateOtp();
+    await sendOtpEmail(email, otp, "Test User");
+
+    return res.status(200).json({
+      success: true,
+      message: "Test OTP email sent successfully.",
+      otp,
+    });
+  } catch (error) {
+    console.error("Test OTP Email Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
 
