@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { createElement, useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft, CheckCircle, CreditCard, Smartphone, Banknote,
@@ -375,6 +375,29 @@ export function PaymentPage() {
           font-size: 0.68rem; font-weight: 700;
           letter-spacing: 0.02em;
         }
+
+        @media (max-width: 560px) {
+          .method-card {
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 14px;
+            border-radius: 16px;
+          }
+          .method-card .trust-badge {
+            margin-top: 4px;
+          }
+          .summary-row {
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .summary-row span:last-child {
+            flex-shrink: 0;
+          }
+          .pay-btn {
+            padding: 16px 14px;
+            font-size: 0.95rem;
+          }
+        }
       `}</style>
 
       {/* ── Navbar ── */}
@@ -516,7 +539,7 @@ export function PaymentPage() {
                 { icon: Clock, text: booking?.timeSlot },
               ].filter(i => i.text).map(({ icon: Icon, text }) => (
                 <span key={text} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.75rem", color: "rgba(255,255,255,0.7)" }}>
-                  <Icon style={{ width: 11, height: 11, opacity: 0.7 }} />{text}
+                  {createElement(Icon, { style: { width: 11, height: 11, opacity: 0.7 } })}{text}
                 </span>
               ))}
             </div>
@@ -579,7 +602,7 @@ export function PaymentPage() {
                 flexShrink: 0, transition: "all 0.25s",
                 border: `1.5px solid ${selectedMethod === id ? color + "30" : "#f1f5f9"}`,
               }}>
-                <Icon style={{ width: 22, height: 22, color: selectedMethod === id ? color : "#94a3b8", transition: "color 0.25s" }} />
+                {createElement(Icon, { style: { width: 22, height: 22, color: selectedMethod === id ? color : "#94a3b8", transition: "color 0.25s" } })}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -659,7 +682,7 @@ export function PaymentPage() {
             { icon: CheckCircle, text: "Razorpay Secured" },
           ].map(({ icon: Icon, text }) => (
             <span key={text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.7rem", color: "#94a3b8" }}>
-              <Icon style={{ width: 11, height: 11 }} /> {text}
+              {createElement(Icon, { style: { width: 11, height: 11 } })} {text}
             </span>
           ))}
         </div>

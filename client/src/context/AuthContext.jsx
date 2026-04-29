@@ -1,8 +1,20 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const AuthContext = createContext(null);
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+class AuthRequestError extends Error {
+  constructor(data) {
+    super(data?.message || "Request failed");
+    this.name = "AuthRequestError";
+    this.data = data || {};
+    this.needsVerification = Boolean(data?.needsVerification);
+    this.email = data?.email;
+    this.role = data?.role;
+  }
+}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -40,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ name, email, password, phone }),
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.message);
+    if (!data.success) throw new AuthRequestError(data);
     // Returns { success, message, email, role } — no token yet
     return data;
   };
@@ -52,7 +64,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify(formData),
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.message);
+    if (!data.success) throw new AuthRequestError(data);
     return data;
   };
 
@@ -63,7 +75,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ name, email, password, adminKey }),
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.message);
+    if (!data.success) throw new AuthRequestError(data);
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -77,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ email, otp, role }),
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.message);
+    if (!data.success) throw new AuthRequestError(data);
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -91,7 +103,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ email, role }),
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.message);
+    if (!data.success) throw new AuthRequestError(data);
     return data;
   };
 
@@ -102,7 +114,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.message);
+    if (!data.success) throw new AuthRequestError(data);
     setToken(data.token);
     setUser(data.user);
     return data;

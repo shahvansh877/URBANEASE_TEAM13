@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useCallback, useState, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ArrowLeft, Star, MapPin, Briefcase, SlidersHorizontal, Search, Clock } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const CATEGORY_NAMES = {
+  all: "All Services",
   cleaning: "Cleaning", plumbing: "Plumbing", electrical: "Electrical",
   carpentry: "Carpentry", painting: "Painting", appliance_repair: "Appliance Repair",
   ac_repair: "AC Repair", pest_control: "Pest Control", gardening: "Gardening",
@@ -15,14 +16,14 @@ const CATEGORY_NAMES = {
 export function ProvidersListPage() {
   const { category } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("createdAt");
   const [minRating, setMinRating] = useState("");
   const [cityFilter, setCityFilter] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("q") || "");
 
   const renderAverageStars = (rating) => {
     const filled = Math.round(rating || 0);
@@ -44,12 +45,13 @@ export function ProvidersListPage() {
     );
   };
 
-  const fetchProviders = async () => {
+  const fetchProviders = useCallback(async () => {
     setLoading(true);
     try {
       let url = `${API}/services/providers/${category}?sort=${sort}`;
       if (minRating) url += `&minRating=${minRating}`;
       if (cityFilter) url += `&city=${cityFilter}`;
+      if (search.trim()) url += `&q=${encodeURIComponent(search.trim())}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) setProviders(data.providers);
@@ -58,13 +60,30 @@ export function ProvidersListPage() {
     } finally {
       setLoading(false);
     }
+  }, [category, sort, minRating, cityFilter, search]);
+
+  useEffect(() => { fetchProviders(); }, [fetchProviders]);
+
+  useEffect(() => {
+    const query = searchParams.get("q") || "";
+    setSearch(query);
+  }, [searchParams]);
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearch(value);
+    const nextParams = new URLSearchParams(searchParams);
+    if (value.trim()) nextParams.set("q", value);
+    else nextParams.delete("q");
+    setSearchParams(nextParams, { replace: true });
   };
 
-  useEffect(() => { fetchProviders(); }, [category, sort, minRating, cityFilter]);
-
   const filtered = providers.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.city.toLowerCase().includes(search.toLowerCase())
+    !search.trim() ||
+    p.name?.toLowerCase().includes(search.toLowerCase()) ||
+    p.city?.toLowerCase().includes(search.toLowerCase()) ||
+    p.serviceCategory?.toLowerCase().includes(search.toLowerCase()) ||
+    p.serviceDescription?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -118,12 +137,15 @@ export function ProvidersListPage() {
           font-size: 0.8rem; font-weight: 600; cursor: pointer;
           font-family: 'DM Sans', sans-serif;
           transition: background 0.2s; white-space: nowrap;
+          display: inline-flex; align-items: center; justify-content: center;
         }
         .book-btn:hover { background: #1d4ed8; }
         .star { color: #f59e0b; }
         @media (max-width: 640px) {
           .provider-card { flex-direction: column; }
           .filter-row { flex-direction: column !important; }
+          .provider-card > div:last-child { width: 100%; }
+          .book-btn { width: 100%; justify-content: center; padding: 11px 18px; }
         }
       `}</style>
 
@@ -145,7 +167,7 @@ export function ProvidersListPage() {
         <div className="filter-row" style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
           <div className="search-wrap">
             <Search style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 16, height: 16, color: "#94a3b8" }} />
-            <input placeholder="Search by name or city..." value={search} onChange={e => setSearch(e.target.value)} />
+            <input placeholder="Search provider, service, or city..." value={search} onChange={handleSearchChange} />
           </div>
           <select className="filter-select" value={sort} onChange={e => setSort(e.target.value)}>
             <option value="createdAt">Latest</option>

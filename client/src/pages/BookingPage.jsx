@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { createElement, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, MapPin, Star, Briefcase, Calendar as CalIcon,
@@ -196,7 +196,20 @@ export function BookingPage() {
         .bkbtn:disabled { opacity:0.7; cursor:not-allowed; }
         .hbtn { width:36px; height:36px; border-radius:10px; border:2px solid #e2e8f0; background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; color:#374151; }
         .hbtn:hover { border-color:#2563eb; color:#2563eb; }
-        @media(max-width:768px){ .blayout{ grid-template-columns:1fr !important; } }
+        .provider-hero-row { display:flex; gap:16px; align-items:center; }
+        .provider-price { text-align:right; flex-shrink:0; }
+        .summary-value { font-weight:500; color:#0f172a; text-align:right; max-width:58%; overflow-wrap:anywhere; }
+        @media(max-width:768px){
+          .blayout{ grid-template-columns:1fr !important; }
+          .sbox { padding:20px 18px; border-radius:16px; }
+          .provider-hero-row { flex-direction:column; align-items:flex-start; }
+          .provider-price { text-align:left; width:100%; padding-top:2px; }
+        }
+        @media(max-width:480px){
+          .sbox { padding:18px 14px; }
+          .slot-chip { flex:1 1 calc(50% - 8px); text-align:center; padding-left:8px; padding-right:8px; }
+          .summary-value { max-width:52%; }
+        }
       `}</style>
 
       {/* Navbar */}
@@ -215,7 +228,7 @@ export function BookingPage() {
           <div>
             {/* Provider hero card */}
             <div style={{ background:"linear-gradient(135deg,#0f172a,#1e3a5f,#2563eb)", borderRadius:18, padding:24, marginBottom:14 }}>
-              <div style={{ display:"flex", gap:16, alignItems:"center" }}>
+              <div className="provider-hero-row">
                 <div style={{ width:64, height:64, borderRadius:16, background:"rgba(255,255,255,0.15)", border:"2px solid rgba(255,255,255,0.25)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.5rem", fontWeight:700, color:"white", fontFamily:"'Fraunces',serif", flexShrink:0 }}>
                   {provider.name[0]}
                 </div>
@@ -227,7 +240,7 @@ export function BookingPage() {
                   <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
                     {[{I:Briefcase,t:provider.serviceCategory},{I:MapPin,t:provider.city},{I:Phone,t:provider.phone}].map(({I,t})=>(
                       <span key={t} style={{ display:"flex", alignItems:"center", gap:4, fontSize:"0.78rem", color:"rgba(255,255,255,0.75)" }}>
-                        <I style={{ width:12, height:12 }} />{t}
+                        {createElement(I, { style: { width:12, height:12 } })}{t}
                       </span>
                     ))}
                     <span style={{ display:"flex", alignItems:"center", gap:6, fontSize:"0.78rem", color:"rgba(255,255,255,0.9)" }}>
@@ -236,7 +249,7 @@ export function BookingPage() {
                     </span>
                   </div>
                 </div>
-                <div style={{ textAlign:"right", flexShrink:0 }}>
+                <div className="provider-price">
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:"1.5rem", fontWeight:700, color:"white" }}>₹{pricePerHour}</div>
                   <div style={{ fontSize:"0.7rem", color:"rgba(255,255,255,0.55)" }}>per hour</div>
                 </div>
@@ -365,7 +378,7 @@ export function BookingPage() {
                 ].map(({label,value})=>(
                   <div key={label} style={{ display:"flex", justifyContent:"space-between", fontSize:"0.82rem" }}>
                     <span style={{ color:"#64748b" }}>{label}</span>
-                    <span style={{ fontWeight:500, color:"#0f172a", textAlign:"right", maxWidth:"58%" }}>{value}</span>
+                    <span className="summary-value">{value}</span>
                   </div>
                 ))}
               </div>

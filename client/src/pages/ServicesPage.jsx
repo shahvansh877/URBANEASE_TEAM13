@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   Search, LogOut, ChevronRight, Sparkles, ChevronDown, UserCircle,
-  ArrowLeft,
   Wrench, Zap, Paintbrush, Home, Shield, Leaf,
   Wind, Bug, KeyRound, Sofa, Package, Hammer
 } from "lucide-react";
+import { SiteFooter } from "../components/SiteFooter";
 
 const CATEGORIES = [
   { id: "cleaning",        name: "Cleaning",        icon: Sparkles,   color: "#0ea5e9", bg: "#e0f2fe", description: "Home & office cleaning",       subcategories: ["Regular Cleaning","Deep Cleaning","Sofa Cleaning","Carpet Cleaning"] },
@@ -30,7 +30,6 @@ export function ServicesPage() {
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const firstName = user?.name?.split(" ")[0] || "there";
 
   useEffect(() => {
     const handleOutside = (e) => {
@@ -66,91 +65,80 @@ export function ServicesPage() {
         .sub-chip { padding:3px 10px; border-radius:20px; font-size:0.7rem; font-weight:500; background:#f1f5f9; color:#64748b; white-space:nowrap; }
         .search-input { width:100%; padding:12px 16px 12px 44px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:0.9rem; outline:none; background:white; font-family:'DM Sans',sans-serif; color:#0f172a; transition:border-color 0.2s; box-sizing:border-box; }
         .search-input:focus { border-color:#2563eb; }
+        .nav-glass { background:#071432; backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,0.08); }
+        .ue-nav-links { display:flex !important; align-items:center; gap:2rem; }
         @media(max-width:640px){
           .cat-grid { grid-template-columns:1fr 1fr !important; gap:12px !important; }
           .cat-card { padding:14px 12px; }
+          .ue-nav-inner { height:auto !important; min-height:4rem; flex-wrap:wrap; gap:10px; padding-top:10px; padding-bottom:10px; }
+          .ue-nav-links { order:3; width:100%; gap:18px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+          .ue-nav-links::-webkit-scrollbar { display:none; }
+          .ue-nav-links a { white-space:nowrap; flex-shrink:0; }
         }
       `}</style>
 
-      {/* Dark blue navbar — matches admin/booking pages */}
-      <nav style={{ background:"rgba(7,20,50,0.7)", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:50 }}>
-        <div
-          onClick={() => navigate("/")}
-          style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer" }}
-        >
-          <ArrowLeft style={{ width:15, height:15, color:"rgba(255,255,255,0.85)" }} />
-          <div style={{ width:32, height:32, borderRadius:9, background:"#2563eb", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <span style={{ fontFamily:"'Fraunces',serif", color:"white", fontWeight:700, fontSize:"1rem" }}>U</span>
-          </div>
-          <span style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"white", fontSize:"1.1rem" }}>UrbanEase</span>
+      {/* Same glass navbar as the homepage */}
+      <nav className="nav-glass fixed top-0 left-0 right-0 z-50">
+        <div className="ue-nav-inner max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5 no-underline">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
+              <span className="font-display text-white font-bold">U</span>
+            </div>
+            <span className="font-display text-white font-semibold text-lg">UrbanEase</span>
+          </Link>
+
+        <div className="ue-nav-links hidden md:flex items-center gap-8">
+          <Link to="/" className="text-blue-200 hover:text-white text-sm no-underline">Home</Link>
+          <Link to="/#how-it-works" className="text-blue-200 hover:text-white text-sm no-underline">How It Works</Link>
+          <Link to="/services" className="text-white text-sm font-semibold no-underline">Services</Link>
+          <Link to="/contact" className="text-blue-200 hover:text-white text-sm no-underline">Contact</Link>
+          <Link to="/team" className="text-blue-200 hover:text-white text-sm no-underline">Team Detail</Link>
         </div>
 
         {user ? (
-        <div ref={dropdownRef} style={{ marginLeft:"auto", position:"relative" }}>
+        <div ref={dropdownRef} className="relative">
           <button
             onClick={() => setDropdownOpen(o => !o)}
-            style={{
-              display:"flex", alignItems:"center", gap:8,
-              background:"rgba(255,255,255,0.08)",
-              border:"1px solid rgba(255,255,255,0.2)",
-              borderRadius:24, padding:"5px 12px 5px 6px",
-              cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
-              transition:"all 0.2s",
-            }}
-            onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
-            onMouseOut={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+            className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1.5 cursor-pointer text-white"
           >
-            <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#2563eb,#60a5fa)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.75rem", fontWeight:700, color:"white", flexShrink:0 }}>
+            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">
               {(user?.name?.[0] || "U").toUpperCase()}
             </div>
-            <span style={{ fontSize:"0.82rem", fontWeight:500, color:"rgba(255,255,255,0.9)" }}>{user?.name?.split(" ")[0] || "Account"}</span>
-            <ChevronDown style={{ width:13, height:13, color:"rgba(255,255,255,0.5)", transform: dropdownOpen ? "rotate(180deg)" : "none", transition:"transform 0.2s" }} />
+            <span className="text-sm font-medium">{user?.name?.split(" ")[0] || "Account"}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
           </button>
 
           {dropdownOpen && (
-            <div style={{
-              position:"absolute", right:0, top:"calc(100% + 8px)",
-              background:"white", borderRadius:14, minWidth:180,
-              boxShadow:"0 8px 32px rgba(0,0,0,0.15)", border:"1px solid #f1f5f9",
-              overflow:"hidden", zIndex:200,
-            }}>
-              <div style={{ padding:"14px 16px", borderBottom:"1px solid #f8fafc", background:"#fafbff" }}>
-                <div style={{ fontSize:"0.82rem", fontWeight:700, color:"#0f172a" }}>{user?.name}</div>
-                <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginTop:2 }}>{user?.email}</div>
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[100]">
+              <div className="p-4 border-bottom border-gray-50 bg-gray-50">
+                <div className="text-sm font-bold text-gray-800">{user?.name}</div>
+                <div className="text-xs text-gray-400">{user?.email}</div>
               </div>
 
               <button
                 onClick={() => { setDropdownOpen(false); navigate("/profile"); }}
-                style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"11px 16px", background:"none", border:"none", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontSize:"0.85rem", color:"#374151", textAlign:"left", transition:"background 0.15s" }}
-                onMouseOver={e => e.currentTarget.style.background = "#f8fafc"}
-                onMouseOut={e => e.currentTarget.style.background = "none"}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 bg-white border-none cursor-pointer"
               >
-                <UserCircle style={{ width:16, height:16, color:"#2563eb" }} />
+                <UserCircle className="w-4 h-4 text-blue-600" />
                 My Profile
               </button>
 
               <button
                 onClick={() => { setDropdownOpen(false); logout(); }}
-                style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"11px 16px", background:"none", border:"none", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontSize:"0.85rem", color:"#ef4444", textAlign:"left", borderTop:"1px solid #f8fafc", transition:"background 0.15s" }}
-                onMouseOver={e => e.currentTarget.style.background = "#fef2f2"}
-                onMouseOut={e => e.currentTarget.style.background = "none"}
+                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 bg-white border-none cursor-pointer border-t border-gray-50"
               >
-                <LogOut style={{ width:16, height:16 }} />
-                Logout
+                <LogOut className="w-4 h-4" /> Logout
               </button>
             </div>
           )}
         </div>
         ) : (
-          <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:10 }}>
-            <Link to="/login" style={{ padding:"8px 16px", borderRadius:10, border:"1px solid rgba(255,255,255,0.25)", color:"white", textDecoration:"none", fontSize:"0.82rem", fontWeight:600 }}>
-              Sign In
-            </Link>
-          </div>
+          <Link to="/login" className="px-4 py-2 rounded-lg text-white text-sm font-medium border border-white/30 hover:bg-white/10 no-underline">Sign In</Link>
         )}
+        </div>
       </nav>
 
-      <div style={{ maxWidth:1100, margin:"0 auto", padding:"32px 20px" }}>
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"96px 20px 56px" }}>
 
         {/* Header */}
         <div style={{ marginBottom:28 }}>
@@ -202,6 +190,7 @@ export function ServicesPage() {
           })}
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }

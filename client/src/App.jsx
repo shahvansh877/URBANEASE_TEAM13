@@ -12,7 +12,8 @@ import { PaymentPage } from "./pages/PaymentPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminQueriesPage } from "./pages/AdminQueriesPage";
 
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
@@ -74,8 +75,24 @@ function UserDashboard() {
   return <Navigate to="/services" replace />;
 }
 
+function ScrollManager() {
+  const { pathname, hash, key } = useLocation();
 
+  useEffect(() => {
+    if (hash) {
+      window.setTimeout(() => {
+        const target = document.getElementById(hash.slice(1));
+        if (target) target.scrollIntoView({ behavior: "auto", block: "start" });
+        else window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }, 0);
+      return;
+    }
 
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname, hash, key]);
+
+  return null;
+}
 
 
 export default function App() {
@@ -84,6 +101,8 @@ export default function App() {
   if (loading) return <LoadingScreen />;
 
   return (
+    <>
+    <ScrollManager />
     <Routes>
       {/* Homepage */}
       <Route path="/" element={<HomePage />} />
@@ -233,5 +252,6 @@ export default function App() {
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }

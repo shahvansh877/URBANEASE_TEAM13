@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { createElement, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -88,6 +88,12 @@ export function AdminProfilePage() {
         .quick-link:last-child { border-bottom:none; }
         .quick-link:hover { background:#f8fafc; }
         @media(max-width:768px){ .agrid{ grid-template-columns:1fr !important; } .asgrid{ grid-template-columns:1fr 1fr !important; } }
+        @media(max-width:480px){
+          .astat-card { padding:14px 12px; }
+          .prov-row { padding:14px 12px; }
+          .prov-row > div { align-items:flex-start !important; flex-wrap:wrap; }
+          .cap-grid { grid-template-columns:1fr !important; }
+        }
       `}</style>
 
       {/* Navbar */}
@@ -224,10 +230,10 @@ export function AdminProfilePage() {
                 { label:"Admin Dashboard",    path:"/admin-dashboard",   icon:BarChart2  },
                 { label:"Pending Approvals",  path:"/admin-dashboard",   icon:Clock      },
                 { label:"Platform Settings",  path:null,                 icon:Settings   },
-              ].map(({ label, path, icon: Icon }, i) => (
+              ].map(({ label, path, icon: Icon }) => (
                 <div key={label} className="quick-link" onClick={() => path && navigate(path)}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <Icon style={{ width:16, height:16, color:"#2563eb" }} />
+                    {createElement(Icon, { style: { width:16, height:16, color:"#2563eb" } })}
                     <span style={{ fontSize:"0.875rem", color:"#374151", fontWeight:500 }}>{label}</span>
                   </div>
                   {path && <ChevronRight style={{ width:15, height:15, color:"#94a3b8" }} />}
@@ -243,7 +249,7 @@ export function AdminProfilePage() {
               {adminStats.map(({label,value,icon:Icon,color,bg}) => (
                 <div key={label} className="astat-card">
                   <div style={{ width:38, height:38, borderRadius:10, background:bg, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12 }}>
-                    <Icon style={{ width:18, height:18, color }} />
+                    {createElement(Icon, { style: { width:18, height:18, color } })}
                   </div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:"1.8rem", fontWeight:700, color:"#0f172a", lineHeight:1 }}>{value}</div>
                   <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginTop:4, fontWeight:500 }}>{label}</div>
@@ -299,7 +305,7 @@ export function AdminProfilePage() {
             {/* Admin info card */}
             <div style={{ background:"linear-gradient(135deg,#f8fafc,#eff6ff)", borderRadius:18, padding:24, border:"1.5px solid #dbeafe" }}>
               <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:"1rem", fontWeight:700, color:"#0f172a", marginBottom:16 }}>Admin Capabilities</h3>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <div className="cap-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                 {[
                   { icon:"✅", label:"Approve Providers",    desc:"Review and verify new service providers"        },
                   { icon:"❌", label:"Reject Applications",  desc:"Decline with reason and notify provider"        },

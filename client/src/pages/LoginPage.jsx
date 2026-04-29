@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, KeyRound, RefreshCw } from "lucide-react";
+import { getEmailError, getOtpError, getPasswordError, toFriendlyAuthError } from "../utils/formValidation";
 
 export function LoginPage() {
   const { login, verifyOtp, resendOtp } = useAuth();
@@ -11,6 +12,7 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState("");
 
   // OTP States (for users who need to verify)
@@ -32,11 +34,34 @@ export function LoginPage() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
+    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
     setSuccess("");
+  };
+
+  const validateLogin = () => {
+    const nextErrors = {
+      email: getEmailError(form.email),
+      password: getPasswordError(form.password),
+    };
+    Object.keys(nextErrors).forEach((key) => {
+      if (!nextErrors[key]) delete nextErrors[key];
+    });
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const message = name === "email" ? getEmailError(value) : getPasswordError(value);
+    setFieldErrors((prev) => ({ ...prev, [name]: message }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateLogin()) {
+      setError("Please fix the highlighted details before signing in.");
+      return;
+    }
     setLoading(true);
     setError("");
     setSuccess("");
@@ -46,17 +71,10 @@ export function LoginPage() {
       else if (data.user.role === "serviceProvider") navigate("/provider-dashboard");
       else navigate("/");
     } catch (err) {
-      // Check if the error is specifically about email verification
-      // My backend returns { success: false, message: "...", needsVerification: true, email: "...", role: "..." }
-      // But AuthContext login function just throws Error(data.message).
-      // I should modify AuthContext.login to return the full data or catch it here.
-      // Let's assume for now the backend error message includes "verify your email" or I check the API response properly.
-      
-      // Since I know I need to handle this, let's briefly look at AuthContext again.
-      // In AuthContext.js: if (!data.success) throw new Error(data.message);
-      // I need to change AuthContext to pass the extra data if possible, or just parse the error.
-      // Better: I'll update AuthContext.js login to pass the whole data object if it needs verification.
-      setError(err.message);
+      if (err.needsVerification) {
+        setPendingRole(err.role || "user");
+      }
+      setError(toFriendlyAuthError(err, "We could not sign you in. Please check your details and try again."));
     } finally {
       setLoading(false);
     }
@@ -72,15 +90,14 @@ export function LoginPage() {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    if (otp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP");
+    const otpError = getOtpError(otp);
+    if (otpError) {
+      setError(otpError);
       return;
     }
     setLoading(true);
     setError("");
     try {
-      // We need to know the role. Since we don't know it from login error yet, 
-      // let's assume 'user' or try both. Better to update AuthContext.
       const data = await verifyOtp({ email: form.email, otp, role: pendingRole });
       setSuccess("Email verified and logged in!");
       
@@ -89,7 +106,7 @@ export function LoginPage() {
         else navigate("/");
       }, 1500);
     } catch (err) {
-      setError(err.message);
+      setError(toFriendlyAuthError(err, "We could not verify this code. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -104,7 +121,7 @@ export function LoginPage() {
       setSuccess("New OTP sent to your email!");
       setResendTimer(60);
     } catch (err) {
-      setError(err.message);
+      setError(toFriendlyAuthError(err, "We could not send a new code. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -284,6 +301,20 @@ export function LoginPage() {
           box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
         }
         .ue-input::placeholder { color: #94a3b8; }
+        .ue-input-error {
+          border-color: #fca5a5;
+          background: #fff7f7;
+        }
+        .ue-input-error:focus {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+        }
+        .ue-field-error {
+          margin-top: 7px;
+          color: #b91c1c;
+          font-size: 0.78rem;
+          line-height: 1.35;
+        }
 
         .ue-eye-btn {
           position: absolute;
@@ -430,7 +461,7 @@ export function LoginPage() {
           <div className="ue-error">
             {error}
             {error.toLowerCase().includes("verify your email") && !showOtp && (
-              <span className="ue-verify-hint" onClick={() => triggerVerificationFlow("user")}>
+              <span className="ue-verify-hint" onClick={() => triggerVerificationFlow(pendingRole)}>
                 Verify My Account Now
               </span>
             )}
@@ -451,12 +482,16 @@ export function LoginPage() {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="you@example.com"
                   required
-                  className="ue-input"
+                  className={`ue-input ${fieldErrors.email ? "ue-input-error" : ""}`}
                   autoComplete="email"
+                  aria-invalid={Boolean(fieldErrors.email)}
+                  aria-describedby={fieldErrors.email ? "login-email-error" : undefined}
                 />
               </div>
+              {fieldErrors.email && <div id="login-email-error" className="ue-field-error">{fieldErrors.email}</div>}
             </div>
 
             {/* Password */}
@@ -470,11 +505,14 @@ export function LoginPage() {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="Enter your password"
                   required
-                  className="ue-input"
+                  className={`ue-input ${fieldErrors.password ? "ue-input-error" : ""}`}
                   style={{ paddingRight: 48 }}
                   autoComplete="current-password"
+                  aria-invalid={Boolean(fieldErrors.password)}
+                  aria-describedby={fieldErrors.password ? "login-password-error" : undefined}
                 />
                 <button
                   type="button"
@@ -485,6 +523,7 @@ export function LoginPage() {
                   {showPassword ? <EyeOff style={{ width: 18, height: 18 }} /> : <Eye style={{ width: 18, height: 18 }} />}
                 </button>
               </div>
+              {fieldErrors.password && <div id="login-password-error" className="ue-field-error">{fieldErrors.password}</div>}
             </div>
 
             {/* Submit */}

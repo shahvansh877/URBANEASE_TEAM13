@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { createElement, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isBookingEvent, subscribeRealtime } from "../utils/realtime";
@@ -294,6 +294,16 @@ export function ProfilePage() {
         }
         @media (max-width: 480px) {
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
+          .booking-row { padding: 16px 14px; }
+          .booking-row > div:first-child,
+          .booking-row > div:nth-child(3) {
+            flex-wrap: wrap;
+            gap: 10px;
+          }
+          .filter-pill {
+            flex: 1 1 calc(50% - 6px);
+            text-align: center;
+          }
         }
       `}</style>
 
@@ -467,7 +477,7 @@ export function ProfilePage() {
                   onMouseEnter={e => path && (e.currentTarget.style.background = "#f8fafc")}
                   onMouseLeave={e => (e.currentTarget.style.background = "white")}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Icon style={{ width: 16, height: 16, color: "#2563eb" }} />
+                    {createElement(Icon, { style: { width: 16, height: 16, color: "#2563eb" } })}
                     <span style={{ fontSize: "0.875rem", color: "#374151", fontWeight: 500 }}>{label}</span>
                   </div>
                   {path && <ChevronRight style={{ width: 15, height: 15, color: "#94a3b8" }} />}
@@ -496,7 +506,7 @@ export function ProfilePage() {
               <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "1.15rem", fontWeight: 700, color: "#0f172a" }}>
                 {filter === "all" ? "All Bookings" : filter === "upcoming" ? "Upcoming" : filter === "completed" ? "Completed" : "Cancelled"}
               </h2>
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", width: "100%" }}>
                 {FILTERS.map(f => (
                   <button key={f} className={`filter-pill ${filter === f ? "active" : "inactive"}`}
                     onClick={() => setFilter(f)}>

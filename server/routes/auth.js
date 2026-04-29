@@ -14,6 +14,41 @@ const generateToken = (id, role) => {
   });
 };
 
+const serializeAccount = (account, role) => {
+  const responseUser = {
+    id: account._id,
+    name: account.name,
+    email: account.email,
+    role,
+    isActive: account.isActive,
+  };
+
+  if (role === "user") {
+    responseUser.phone = account.phone || "";
+    responseUser.address = account.address || "";
+  }
+
+  if (role === "serviceProvider") {
+    responseUser.phone = account.phone || "";
+    responseUser.address = account.address || "";
+    responseUser.city = account.city || "";
+    responseUser.serviceCategory = account.serviceCategory;
+    responseUser.serviceDescription = account.serviceDescription || "";
+    responseUser.experience = account.experience || 0;
+    responseUser.rating = account.rating || 0;
+    responseUser.totalReviews = account.totalReviews || 0;
+    responseUser.isVerified = account.isVerified;
+    responseUser.verificationStatus = account.verificationStatus;
+    responseUser.rejectionReason = account.rejectionReason || "";
+  }
+
+  if (role === "admin") {
+    responseUser.lastLogin = account.lastLogin;
+  }
+
+  return responseUser;
+};
+
 const isEmailTaken = async (email) => {
   const [user, provider, admin] = await Promise.all([
     User.findOne({ email, isEmailVerified: true }),
@@ -142,16 +177,7 @@ router.post("/verify-otp", async (req, res) => {
     // Generate token and log them in
     const token = generateToken(account._id, role);
 
-    const responseUser = { id: account._id, name: account.name, email: account.email, role };
-    if (role === "serviceProvider") {
-      responseUser.phone = account.phone;
-      responseUser.address = account.address;
-      responseUser.city = account.city;
-      responseUser.serviceCategory = account.serviceCategory;
-      responseUser.isVerified = account.isVerified;
-      responseUser.verificationStatus = account.verificationStatus;
-      responseUser.rejectionReason = account.rejectionReason;
-    }
+    const responseUser = serializeAccount(account, role);
 
     if (role === "serviceProvider") {
       req.app.get("realtime")?.emitToAdmins({
@@ -239,7 +265,7 @@ router.post("/signup/admin", async (req, res) => {
       success: true,
       message: "Admin registered successfully",
       token,
-      user: { id: admin._id, name: admin.name, email: admin.email, role: admin.role },
+      user: serializeAccount(admin, "admin"),
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -295,16 +321,7 @@ router.post("/login", async (req, res) => {
 
     const token = generateToken(account._id, role);
 
-    const responseUser = { id: account._id, name: account.name, email: account.email, role };
-    if (role === "serviceProvider") {
-      responseUser.phone = account.phone;
-      responseUser.address = account.address;
-      responseUser.city = account.city;
-      responseUser.serviceCategory = account.serviceCategory;
-      responseUser.isVerified = account.isVerified;
-      responseUser.verificationStatus = account.verificationStatus;
-      responseUser.rejectionReason = account.rejectionReason;
-    }
+    const responseUser = serializeAccount(account, role);
 
     res.status(200).json({ success: true, message: "Login successful", token, user: responseUser });
   } catch (error) {
@@ -320,34 +337,57 @@ router.get("/me", protect, async (req, res) => {
 // ── Update current user profile ──────────────────────────
 router.put("/update-profile", protect, async (req, res) => {
   try {
-    if (req.userRole !== "user") {
-      return res.status(403).json({ success: false, message: "Only users can update this profile" });
+    const { name, phone, address, city, experience, serviceDescription } = req.body;
+    const roleModel = { user: User, serviceProvider: ServiceProvider, admin: Admin }[req.userRole];
+
+    if (!roleModel) return res.status(400).json({ success: false, message: "Invalid account role" });
+
+    const account = await roleModel.findById(req.user._id);
+    if (!account) return res.status(404).json({ success: false, message: "Account not found" });
+
+    if (typeof name === "string") {
+      const trimmedName = name.trim();
+      if (!trimmedName) return res.status(400).json({ success: false, message: "Name is required" });
+      account.name = trimmedName;
     }
 
-    const { name, phone, address } = req.body;
-    const user = await User.findById(req.user._id);
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    if (req.userRole === "user") {
+      if (typeof phone === "string") account.phone = phone.trim();
+      if (typeof address === "string") account.address = address.trim();
     }
 
-    if (typeof name === "string" && name.trim()) user.name = name.trim();
-    if (typeof phone === "string") user.phone = phone.trim();
-    if (typeof address === "string") user.address = address.trim();
+    if (req.userRole === "serviceProvider") {
+      if (typeof phone === "string") {
+        const trimmedPhone = phone.trim();
+        if (!trimmedPhone) return res.status(400).json({ success: false, message: "Phone number is required" });
+        account.phone = trimmedPhone;
+      }
+      if (typeof address === "string") {
+        const trimmedAddress = address.trim();
+        if (!trimmedAddress) return res.status(400).json({ success: false, message: "Address is required" });
+        account.address = trimmedAddress;
+      }
+      if (typeof city === "string") {
+        const trimmedCity = city.trim();
+        if (!trimmedCity) return res.status(400).json({ success: false, message: "City is required" });
+        account.city = trimmedCity;
+      }
+      if (typeof serviceDescription === "string") account.serviceDescription = serviceDescription.trim();
+      if (experience !== undefined) {
+        const years = Number(experience);
+        if (Number.isNaN(years) || years < 0) {
+          return res.status(400).json({ success: false, message: "Experience must be zero or more" });
+        }
+        account.experience = years;
+      }
+    }
 
-    await user.save();
+    await account.save({ validateBeforeSave: false });
 
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        address: user.address,
-        role: user.role,
-      },
+      user: serializeAccount(account, req.userRole),
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

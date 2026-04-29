@@ -6,6 +6,7 @@ import {
   Briefcase, Shield, ArrowRight, ArrowLeft,
   MapPin, ChevronDown, KeyRound, RefreshCw,
 } from "lucide-react";
+import { getEmailError, getOtpError, getPasswordError, getPhoneError, toFriendlyAuthError } from "../utils/formValidation";
 
 const SERVICE_CATEGORIES = [
   "Plumbing", "Electrical", "Cleaning", "Carpentry",
@@ -20,6 +21,7 @@ export function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState("");
   
   // OTP States
@@ -47,10 +49,63 @@ export function SignupPage() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
+    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+  };
+
+  const validateSignup = () => {
+    const nextErrors = {
+      name: form.name.trim() ? "" : "Full name is required.",
+      email: getEmailError(form.email),
+      password: getPasswordError(form.password),
+    };
+
+    if (role === "user" || role === "serviceProvider") {
+      nextErrors.phone = getPhoneError(form.phone, { required: role === "serviceProvider" });
+    }
+
+    if (role === "serviceProvider") {
+      nextErrors.serviceCategory = form.serviceCategory ? "" : "Please select a service category.";
+      nextErrors.city = form.city.trim() ? "" : "City is required.";
+      nextErrors.address = form.address.trim() ? "" : "Address is required.";
+      nextErrors.experience = Number(form.experience || 0) < 0 ? "Experience cannot be negative." : "";
+    }
+
+    if (role === "admin") {
+      nextErrors.adminKey = form.adminKey.trim() ? "" : "Admin secret key is required.";
+    }
+
+    Object.keys(nextErrors).forEach((key) => {
+      if (!nextErrors[key]) delete nextErrors[key];
+    });
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const validateField = (name, value) => {
+    if (name === "name") return value.trim() ? "" : "Full name is required.";
+    if (name === "email") return getEmailError(value);
+    if (name === "password") return getPasswordError(value);
+    if (name === "phone") return getPhoneError(value, { required: role === "serviceProvider" });
+    if (name === "serviceCategory") return value ? "" : "Please select a service category.";
+    if (name === "city") return value.trim() ? "" : "City is required.";
+    if (name === "address") return value.trim() ? "" : "Address is required.";
+    if (name === "experience") return Number(value || 0) < 0 ? "Experience cannot be negative." : "";
+    if (name === "adminKey") return value.trim() ? "" : "Admin secret key is required.";
+    return "";
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const message = validateField(name, value);
+    setFieldErrors((prev) => ({ ...prev, [name]: message }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateSignup()) {
+      setError("Please fix the highlighted details before continuing.");
+      return;
+    }
     setLoading(true);
     setError("");
     setSuccess("");
@@ -78,7 +133,7 @@ export function SignupPage() {
         navigate("/admin-dashboard");
       }
     } catch (err) {
-      setError(err.message);
+      setError(toFriendlyAuthError(err, "We could not create the account. Please check your details and try again."));
     } finally {
       setLoading(false);
     }
@@ -86,14 +141,15 @@ export function SignupPage() {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    if (otp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP");
+    const otpError = getOtpError(otp);
+    if (otpError) {
+      setError(otpError);
       return;
     }
     setLoading(true);
     setError("");
     try {
-      const data = await verifyOtp({ email: form.email, otp, role });
+      await verifyOtp({ email: form.email, otp, role });
       setSuccess("Account verified successfully!");
       
       // Navigate based on role
@@ -102,7 +158,7 @@ export function SignupPage() {
         else navigate("/");
       }, 1500);
     } catch (err) {
-      setError(err.message);
+      setError(toFriendlyAuthError(err, "We could not verify this code. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -117,7 +173,7 @@ export function SignupPage() {
       setSuccess("New OTP sent to your email!");
       setResendTimer(60);
     } catch (err) {
-      setError(err.message);
+      setError(toFriendlyAuthError(err, "We could not send a new code. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -355,6 +411,24 @@ export function SignupPage() {
         }
         .ue-input::placeholder { color: #94a3b8; }
         .ue-input-no-icon { padding-left: 16px; }
+        .ue-input-error,
+        .ue-select.ue-input-error,
+        .ue-textarea.ue-input-error {
+          border-color: #fca5a5;
+          background: #fff7f7;
+        }
+        .ue-input-error:focus,
+        .ue-select.ue-input-error:focus,
+        .ue-textarea.ue-input-error:focus {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+        }
+        .ue-field-error {
+          margin-top: 7px;
+          color: #b91c1c;
+          font-size: 0.76rem;
+          line-height: 1.35;
+        }
 
         .ue-select {
           width: 100%;
@@ -559,22 +633,25 @@ export function SignupPage() {
           <>
             {/* Role Selector */}
             <div className="ue-roles ue-animate">
-              {roles.map(({ id, label, icon: Icon, desc }) => (
+              {roles.map((roleOption) => {
+                const Icon = roleOption.icon;
+                return (
                 <div
-                  key={id}
-                  className={`ue-role-tab ${role === id ? "active" : ""}`}
-                  onClick={() => { setRole(id); setError(""); setSuccess(""); }}
+                  key={roleOption.id}
+                  className={`ue-role-tab ${role === roleOption.id ? "active" : ""}`}
+                  onClick={() => { setRole(roleOption.id); setError(""); setSuccess(""); setFieldErrors({}); }}
                 >
                   <Icon
                     className="ue-role-icon"
-                    style={{ color: role === id ? "#2563eb" : "#94a3b8" }}
+                    style={{ color: role === roleOption.id ? "#2563eb" : "#94a3b8" }}
                   />
-                  <div className="ue-role-label" style={{ color: role === id ? "#1d4ed8" : "#374151" }}>
-                    {label}
+                  <div className="ue-role-label" style={{ color: role === roleOption.id ? "#1d4ed8" : "#374151" }}>
+                    {roleOption.label}
                   </div>
-                  <div className="ue-role-desc">{desc}</div>
+                  <div className="ue-role-desc">{roleOption.desc}</div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Provider notice */}
@@ -605,12 +682,16 @@ export function SignupPage() {
                     name="name"
                     value={form.name}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="John Doe"
                     required
-                    className="ue-input"
+                    className={`ue-input ${fieldErrors.name ? "ue-input-error" : ""}`}
                     autoComplete="name"
+                    aria-invalid={Boolean(fieldErrors.name)}
+                    aria-describedby={fieldErrors.name ? "signup-name-error" : undefined}
                   />
                 </div>
+                {fieldErrors.name && <div id="signup-name-error" className="ue-field-error">{fieldErrors.name}</div>}
               </div>
 
               {/* Email */}
@@ -624,12 +705,16 @@ export function SignupPage() {
                     name="email"
                     value={form.email}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="you@example.com"
                     required
-                    className="ue-input"
+                    className={`ue-input ${fieldErrors.email ? "ue-input-error" : ""}`}
                     autoComplete="email"
+                    aria-invalid={Boolean(fieldErrors.email)}
+                    aria-describedby={fieldErrors.email ? "signup-email-error" : undefined}
                   />
                 </div>
+                {fieldErrors.email && <div id="signup-email-error" className="ue-field-error">{fieldErrors.email}</div>}
               </div>
 
               {/* Password */}
@@ -643,11 +728,14 @@ export function SignupPage() {
                     name="password"
                     value={form.password}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Min. 6 characters"
                     required
-                    className="ue-input"
+                    className={`ue-input ${fieldErrors.password ? "ue-input-error" : ""}`}
                     style={{ paddingRight: 48 }}
                     autoComplete="new-password"
+                    aria-invalid={Boolean(fieldErrors.password)}
+                    aria-describedby={fieldErrors.password ? "signup-password-error" : undefined}
                   />
                   <button
                     type="button"
@@ -660,6 +748,7 @@ export function SignupPage() {
                       : <Eye style={{ width: 17, height: 17 }} />}
                   </button>
                 </div>
+                {fieldErrors.password && <div id="signup-password-error" className="ue-field-error">{fieldErrors.password}</div>}
               </div>
 
               {/* Phone — User & Provider */}
@@ -676,12 +765,16 @@ export function SignupPage() {
                       name="phone"
                       value={form.phone}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       placeholder="9876543210"
                       required={role === "serviceProvider"}
-                      className="ue-input"
+                      className={`ue-input ${fieldErrors.phone ? "ue-input-error" : ""}`}
                       autoComplete="tel"
+                      aria-invalid={Boolean(fieldErrors.phone)}
+                      aria-describedby={fieldErrors.phone ? "signup-phone-error" : undefined}
                     />
                   </div>
+                  {fieldErrors.phone && <div id="signup-phone-error" className="ue-field-error">{fieldErrors.phone}</div>}
                 </div>
               )}
 
@@ -696,8 +789,11 @@ export function SignupPage() {
                         name="serviceCategory"
                         value={form.serviceCategory}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         required
-                        className="ue-select"
+                        className={`ue-select ${fieldErrors.serviceCategory ? "ue-input-error" : ""}`}
+                        aria-invalid={Boolean(fieldErrors.serviceCategory)}
+                        aria-describedby={fieldErrors.serviceCategory ? "signup-category-error" : undefined}
                       >
                         <option value="">Select a category</option>
                         {SERVICE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -706,6 +802,7 @@ export function SignupPage() {
                         style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", width: 17, height: 17, color: "#94a3b8", pointerEvents: "none" }}
                       />
                     </div>
+                    {fieldErrors.serviceCategory && <div id="signup-category-error" className="ue-field-error">{fieldErrors.serviceCategory}</div>}
                   </div>
 
                   <div className="ue-row ue-field">
@@ -719,11 +816,15 @@ export function SignupPage() {
                           name="city"
                           value={form.city}
                           onChange={handleChange}
+                          onBlur={handleBlur}
                           placeholder="Coimbatore"
                           required
-                          className="ue-input"
+                          className={`ue-input ${fieldErrors.city ? "ue-input-error" : ""}`}
+                          aria-invalid={Boolean(fieldErrors.city)}
+                          aria-describedby={fieldErrors.city ? "signup-city-error" : undefined}
                         />
                       </div>
+                      {fieldErrors.city && <div id="signup-city-error" className="ue-field-error">{fieldErrors.city}</div>}
                     </div>
                     <div>
                       <label className="ue-label" htmlFor="signup-exp">Experience (yrs)</label>
@@ -733,10 +834,14 @@ export function SignupPage() {
                         name="experience"
                         value={form.experience}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="0"
                         min="0"
-                        className="ue-input ue-input-no-icon"
+                        className={`ue-input ue-input-no-icon ${fieldErrors.experience ? "ue-input-error" : ""}`}
+                        aria-invalid={Boolean(fieldErrors.experience)}
+                        aria-describedby={fieldErrors.experience ? "signup-exp-error" : undefined}
                       />
+                      {fieldErrors.experience && <div id="signup-exp-error" className="ue-field-error">{fieldErrors.experience}</div>}
                     </div>
                   </div>
 
@@ -750,11 +855,15 @@ export function SignupPage() {
                         name="address"
                         value={form.address}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="123 Main Street"
                         required
-                        className="ue-input"
+                        className={`ue-input ${fieldErrors.address ? "ue-input-error" : ""}`}
+                        aria-invalid={Boolean(fieldErrors.address)}
+                        aria-describedby={fieldErrors.address ? "signup-address-error" : undefined}
                       />
                     </div>
+                    {fieldErrors.address && <div id="signup-address-error" className="ue-field-error">{fieldErrors.address}</div>}
                   </div>
 
                   <div className="ue-field">
@@ -786,11 +895,15 @@ export function SignupPage() {
                       name="adminKey"
                       value={form.adminKey}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       placeholder="Enter admin key"
                       required
-                      className="ue-input"
+                      className={`ue-input ${fieldErrors.adminKey ? "ue-input-error" : ""}`}
+                      aria-invalid={Boolean(fieldErrors.adminKey)}
+                      aria-describedby={fieldErrors.adminKey ? "signup-adminkey-error" : undefined}
                     />
                   </div>
+                  {fieldErrors.adminKey && <div id="signup-adminkey-error" className="ue-field-error">{fieldErrors.adminKey}</div>}
                 </div>
               )}
 

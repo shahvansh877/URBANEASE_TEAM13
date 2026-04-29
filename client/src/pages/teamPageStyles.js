@@ -84,5 +84,35 @@ export const teamPageStyles = `
   .team-page-white .team-back-link { color: #111827; }
   .team-page-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
   @media (max-width: 900px) { .member-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .member-profile { grid-template-columns: 1fr; } }
-  @media (max-width: 700px) { .team-wrap { padding: 92px 12px 38px; } .team-title { letter-spacing: 2px; } .team-card { padding: 20px 16px; } .team-actions, .member-detail-grid { grid-template-columns: 1fr; } .member-grid { grid-template-columns: 1fr; gap: 18px; } .team-page-heading-row { align-items: stretch; flex-direction: column; } }
+  @media (max-width: 700px) {
+    .team-wrap { padding: 126px 12px 38px; }
+    .team-title { letter-spacing: 1px; }
+    .team-subtitle { font-size: 0.88rem; }
+    .team-card,
+    .team-panel,
+    .member-profile,
+    .member-simple-card { width: 100%; max-width: 100%; }
+    .team-card { padding: 20px 16px; }
+    .team-panel { padding: 18px 14px; }
+    .team-actions,
+    .member-detail-grid { grid-template-columns: 1fr; }
+    .member-grid { grid-template-columns: 1fr; gap: 18px; }
+    .team-page-heading-row { align-items: stretch; flex-direction: column; }
+    .team-file-picker { flex-direction: column; }
+    .team-file-picker .team-file-button {
+      border-right: 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .team-file-picker .team-file-name {
+      min-height: 38px;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .member-image-link,
+    .team-submit-btn,
+    .member-card .team-submit-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 `;

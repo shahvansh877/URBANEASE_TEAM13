@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { createElement, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -32,11 +32,20 @@ export function ProviderProfilePage() {
   const dropdownRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    name: "", phone: "", serviceDescription: "",
+    name: "", phone: "", address: "", city: "", experience: "", serviceDescription: "",
   });
 
   useEffect(() => {
-    if (user) setFormData({ name: user.name||"", phone: user.phone||"", serviceDescription: user.serviceDescription||"" });
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        city: user.city || "",
+        experience: user.experience ?? "",
+        serviceDescription: user.serviceDescription || "",
+      });
+    }
 
     const fetchBookings = async () => {
       try {
@@ -73,13 +82,23 @@ export function ProviderProfilePage() {
       const res  = await fetch(`${API}/auth/update-profile`, {
         method:"PUT",
         headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          experience: Number(formData.experience) || 0,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message||"Failed");
       if (data.user) {
         updateUser(data.user);
-        setFormData({ name:data.user.name||"", phone:data.user.phone||"", serviceDescription:data.user.serviceDescription||"" });
+        setFormData({
+          name: data.user.name || "",
+          phone: data.user.phone || "",
+          address: data.user.address || "",
+          city: data.user.city || "",
+          experience: data.user.experience ?? "",
+          serviceDescription: data.user.serviceDescription || "",
+        });
       }
       setIsEditing(false);
     } catch(err) { alert(err.message); } finally { setSaving(false); }
@@ -115,6 +134,46 @@ export function ProviderProfilePage() {
             ? `Your application was not approved. Reason: ${user?.rejectionReason||"Not specified"}.`
             : "Your account is under review by our admin team. This usually takes 24-48 hours."}
         </p>
+        <div style={{ marginTop:24, background:"white", border:"1.5px solid #e2e8f0", borderRadius:18, padding:20, textAlign:"left", boxShadow:"0 10px 30px rgba(15,23,42,0.08)" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:16 }}>
+            <div>
+              <div style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"#0f172a" }}>Provider Details</div>
+              <div style={{ fontSize:"0.78rem", color:"#64748b", marginTop:3 }}>Keep this information correct for admin review.</div>
+            </div>
+            {!isEditing && (
+              <button onClick={()=>setIsEditing(true)} style={{ display:"flex", alignItems:"center", gap:6, border:"none", background:"#2563eb", color:"white", borderRadius:10, padding:"9px 12px", cursor:"pointer", fontSize:"0.78rem", fontWeight:700, fontFamily:"'DM Sans',sans-serif" }}>
+                <Edit2 style={{ width:14, height:14 }} /> Edit
+              </button>
+            )}
+          </div>
+          {isEditing ? (
+            <div style={{ display:"grid", gap:10 }}>
+              <input value={formData.name} onChange={e=>setFormData({...formData,name:e.target.value})} placeholder="Name" style={{ padding:12, borderRadius:12, border:"1.5px solid #e2e8f0", fontFamily:"'DM Sans',sans-serif" }} />
+              <input value={formData.phone} onChange={e=>setFormData({...formData,phone:e.target.value})} placeholder="Phone" style={{ padding:12, borderRadius:12, border:"1.5px solid #e2e8f0", fontFamily:"'DM Sans',sans-serif" }} />
+              <input value={formData.city} onChange={e=>setFormData({...formData,city:e.target.value})} placeholder="City" style={{ padding:12, borderRadius:12, border:"1.5px solid #e2e8f0", fontFamily:"'DM Sans',sans-serif" }} />
+              <input value={formData.address} onChange={e=>setFormData({...formData,address:e.target.value})} placeholder="Address" style={{ padding:12, borderRadius:12, border:"1.5px solid #e2e8f0", fontFamily:"'DM Sans',sans-serif" }} />
+              <input value={formData.experience} onChange={e=>setFormData({...formData,experience:e.target.value})} type="number" min="0" placeholder="Experience in years" style={{ padding:12, borderRadius:12, border:"1.5px solid #e2e8f0", fontFamily:"'DM Sans',sans-serif" }} />
+              <textarea value={formData.serviceDescription} onChange={e=>setFormData({...formData,serviceDescription:e.target.value})} rows={3} placeholder="Service description" style={{ padding:12, borderRadius:12, border:"1.5px solid #e2e8f0", resize:"vertical", fontFamily:"'DM Sans',sans-serif" }} />
+              <div style={{ display:"flex", gap:8 }}>
+                <button onClick={handleSave} disabled={saving} style={{ flex:1, border:"none", background:"#22c55e", color:"white", borderRadius:12, padding:12, cursor:"pointer", fontWeight:700, fontFamily:"'DM Sans',sans-serif" }}>
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+                <button onClick={()=>{ setIsEditing(false); setFormData({name:user?.name||"",phone:user?.phone||"",address:user?.address||"",city:user?.city||"",experience:user?.experience??"",serviceDescription:user?.serviceDescription||""}); }} style={{ border:"1.5px solid #e2e8f0", background:"white", color:"#374151", borderRadius:12, padding:"12px 14px", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display:"grid", gap:8, color:"#334155", fontSize:"0.84rem" }}>
+              <div><strong>Name:</strong> {user?.name || "Not added"}</div>
+              <div><strong>Phone:</strong> {user?.phone || "Not added"}</div>
+              <div><strong>City:</strong> {user?.city || "Not added"}</div>
+              <div><strong>Address:</strong> {user?.address || "Not added"}</div>
+              <div><strong>Experience:</strong> {user?.experience || 0} years</div>
+              <div><strong>Description:</strong> {user?.serviceDescription || "Not added"}</div>
+            </div>
+          )}
+        </div>
         <button onClick={logout} style={{ marginTop:24, width:"100%", background:"#f8fafc", border:"1.5px solid #e2e8f0", borderRadius:12, padding:13, fontSize:"0.875rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", color:"#374151" }}>Logout</button>
       </div>
     </div>
@@ -143,6 +202,16 @@ export function ProviderProfilePage() {
         .textarea-input:focus { border-color:rgba(255,255,255,0.6); }
         .textarea-input::placeholder { color:rgba(255,255,255,0.45); }
         @media(max-width:768px){ .pgrid{ grid-template-columns:1fr !important; } .sgrid{ grid-template-columns:1fr 1fr !important; } }
+        @media(max-width:480px){
+          .pstat-card { padding:14px 12px; }
+          .brow { padding:16px 14px; }
+          .brow > div:first-child,
+          .brow > div:last-child {
+            flex-wrap:wrap;
+            gap:10px;
+          }
+          .fpill { flex:1 1 calc(50% - 6px); text-align:center; }
+        }
       `}</style>
 
       {/* Navbar */}
@@ -227,7 +296,9 @@ export function ProviderProfilePage() {
                 ) : (
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:"1.1rem", fontWeight:700, marginBottom:2 }}>{user?.name}</div>
                 )}
-                <div style={{ fontSize:"0.78rem", opacity:0.7, marginBottom:14 }}>{user?.serviceCategory} · {user?.city}</div>
+                <div style={{ fontSize:"0.78rem", opacity:0.7, marginBottom:14 }}>
+                  {user?.serviceCategory} · {isEditing ? (formData.city || "City") : user?.city}
+                </div>
 
                 {/* Info fields */}
                 <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
@@ -246,18 +317,32 @@ export function ProviderProfilePage() {
 
                   <div className="info-tile" style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                     <MapPin style={{ width:13, height:13, opacity:0.7, flexShrink:0, marginTop:2 }} />
-                    <div>
-                      <div style={{ fontSize:"0.6rem", opacity:0.55, marginBottom:1 }}>Address</div>
-                      <div style={{ fontSize:"0.82rem", lineHeight:1.4 }}>{user?.address||user?.city||"Not added"}</div>
-                    </div>
+                    {isEditing ? (
+                      <div style={{ display:"grid", gap:8, flex:1 }}>
+                        <input value={formData.city} onChange={e=>setFormData({...formData,city:e.target.value})}
+                          className="profile-input" style={{ padding:0, background:"transparent", border:"none" }} placeholder="City" />
+                        <input value={formData.address} onChange={e=>setFormData({...formData,address:e.target.value})}
+                          className="profile-input" style={{ padding:0, background:"transparent", border:"none" }} placeholder="Full address" />
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ fontSize:"0.6rem", opacity:0.55, marginBottom:1 }}>Address</div>
+                        <div style={{ fontSize:"0.82rem", lineHeight:1.4 }}>{user?.address||user?.city||"Not added"}</div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="info-tile" style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <Briefcase style={{ width:13, height:13, opacity:0.7, flexShrink:0 }} />
-                    <div>
-                      <div style={{ fontSize:"0.6rem", opacity:0.55, marginBottom:1 }}>Experience</div>
-                      <div style={{ fontSize:"0.82rem" }}>{user?.experience||0} years in {user?.serviceCategory}</div>
-                    </div>
+                    {isEditing ? (
+                      <input value={formData.experience} onChange={e=>setFormData({...formData,experience:e.target.value})}
+                        type="number" min="0" className="profile-input" style={{ padding:0, background:"transparent", border:"none" }} placeholder="Years of experience" />
+                    ) : (
+                      <div>
+                        <div style={{ fontSize:"0.6rem", opacity:0.55, marginBottom:1 }}>Experience</div>
+                        <div style={{ fontSize:"0.82rem" }}>{user?.experience||0} years in {user?.serviceCategory}</div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="info-tile" style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -295,7 +380,7 @@ export function ProviderProfilePage() {
                         style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px", borderRadius:12, background:"#22c55e", border:"none", color:"white", cursor:"pointer", fontSize:"0.85rem", fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                         <Check style={{ width:14, height:14 }} /> {saving?"Saving...":"Save"}
                       </button>
-                      <button onClick={()=>{ setIsEditing(false); setFormData({name:user?.name||"",phone:user?.phone||"",serviceDescription:user?.serviceDescription||""}); }}
+                      <button onClick={()=>{ setIsEditing(false); setFormData({name:user?.name||"",phone:user?.phone||"",address:user?.address||"",city:user?.city||"",experience:user?.experience??"",serviceDescription:user?.serviceDescription||""}); }}
                         style={{ width:42, display:"flex", alignItems:"center", justifyContent:"center", borderRadius:12, background:"rgba(255,255,255,0.15)", border:"1.5px solid rgba(255,255,255,0.25)", color:"white", cursor:"pointer" }}>
                         <X style={{ width:15, height:15 }} />
                       </button>
@@ -311,10 +396,10 @@ export function ProviderProfilePage() {
                 { label:"My Dashboard",      path:"/provider-dashboard", icon:BarChart2 },
                 { label:"My Bookings",       path:null,                  icon:Package  },
                 { label:"My Service Area",   path:null,                  icon:MapPin   },
-              ].map(({ label, path, icon: Icon }, i) => (
+              ].map(({ label, path, icon: Icon }) => (
                 <div key={label} className="quick-link" onClick={()=>path&&navigate(path)}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <Icon style={{ width:16, height:16, color:"#2563eb" }} />
+                    {createElement(Icon, { style: { width:16, height:16, color:"#2563eb" } })}
                     <span style={{ fontSize:"0.875rem", color:"#374151", fontWeight:500 }}>{label}</span>
                   </div>
                   {path && <ChevronRight style={{ width:15, height:15, color:"#94a3b8" }} />}
@@ -330,7 +415,7 @@ export function ProviderProfilePage() {
               {statsCards.map(({label,value,icon:Icon,color,bg})=>(
                 <div key={label} className="pstat-card">
                   <div style={{ width:38, height:38, borderRadius:10, background:bg, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12 }}>
-                    <Icon style={{ width:18, height:18, color }} />
+                    {createElement(Icon, { style: { width:18, height:18, color } })}
                   </div>
                   <div style={{ fontFamily:"'Fraunces',serif", fontSize:"1.7rem", fontWeight:700, color:"#0f172a", lineHeight:1 }}>{value}</div>
                   <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginTop:4, fontWeight:500 }}>{label}</div>

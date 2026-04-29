@@ -336,6 +336,53 @@ export function AdminQueriesPage() {
     <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+        .queries-table { width: 100%; border-collapse: collapse; min-width: 860px; }
+        @media (max-width: 768px) {
+          .admin-query-actions {
+            width: 100%;
+          }
+          .admin-query-actions button {
+            flex: 1 1 160px;
+            justify-content: center;
+          }
+          .admin-query-search {
+            max-width: none !important;
+          }
+          .queries-table {
+            min-width: 0;
+          }
+          .queries-table thead {
+            display: none;
+          }
+          .queries-table,
+          .queries-table tbody,
+          .queries-table tr,
+          .queries-table td {
+            display: block;
+            width: 100%;
+          }
+          .queries-table tr {
+            padding: 14px;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          .queries-table td {
+            padding: 8px 0 !important;
+            max-width: none !important;
+          }
+          .queries-table td::before {
+            content: attr(data-label);
+            display: block;
+            margin-bottom: 4px;
+            color: #94a3b8;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+          }
+          .queries-table td:first-child {
+            display: none;
+          }
+        }
       `}</style>
 
       <AdminNav
@@ -374,7 +421,7 @@ export function AdminQueriesPage() {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div className="admin-query-actions" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
               onClick={fetchQueries}
               style={{
@@ -429,7 +476,7 @@ export function AdminQueriesPage() {
             marginBottom: 16,
           }}
         >
-          <div style={{ position: "relative", maxWidth: 340 }}>
+          <div className="admin-query-search" style={{ position: "relative", maxWidth: 340 }}>
             <Search
               style={{
                 position: "absolute",
@@ -480,7 +527,7 @@ export function AdminQueriesPage() {
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
+              <table className="queries-table">
                 <thead>
                   <tr style={{ background: "#f8fafc", textAlign: "left" }}>
                     {["#", "Name", "Email", "Query", "Status", "Received"].map((header) => (
@@ -504,19 +551,19 @@ export function AdminQueriesPage() {
                 <tbody>
                   {filteredQueries.map((item, index) => (
                     <tr key={item._id} style={{ borderBottom: "1px solid #f8fafc" }}>
-                      <td style={{ padding: "16px", fontSize: "0.85rem", color: "#64748b", verticalAlign: "top" }}>
+                      <td data-label="#" style={{ padding: "16px", fontSize: "0.85rem", color: "#64748b", verticalAlign: "top" }}>
                         {index + 1}
                       </td>
-                      <td style={{ padding: "16px", verticalAlign: "top" }}>
+                      <td data-label="Name" style={{ padding: "16px", verticalAlign: "top" }}>
                         <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.92rem" }}>{item.name}</div>
                       </td>
-                      <td style={{ padding: "16px", verticalAlign: "top" }}>
+                      <td data-label="Email" style={{ padding: "16px", verticalAlign: "top" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#2563eb", fontSize: "0.88rem" }}>
                           <Mail style={{ width: 14, height: 14 }} />
                           {item.email}
                         </div>
                       </td>
-                      <td style={{ padding: "16px", verticalAlign: "top", maxWidth: 360 }}>
+                      <td data-label="Query" style={{ padding: "16px", verticalAlign: "top", maxWidth: 360 }}>
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                           <MessageSquareText style={{ width: 15, height: 15, color: "#2563eb", marginTop: 2, flexShrink: 0 }} />
                           <span style={{ fontSize: "0.88rem", color: "#334155", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
@@ -524,7 +571,7 @@ export function AdminQueriesPage() {
                           </span>
                         </div>
                       </td>
-                      <td style={{ padding: "16px", verticalAlign: "top" }}>
+                      <td data-label="Status" style={{ padding: "16px", verticalAlign: "top" }}>
                         <span
                           style={{
                             background: "#eff6ff",
@@ -539,7 +586,7 @@ export function AdminQueriesPage() {
                           {item.status || "new"}
                         </span>
                       </td>
-                      <td style={{ padding: "16px", verticalAlign: "top", fontSize: "0.85rem", color: "#64748b" }}>
+                      <td data-label="Received" style={{ padding: "16px", verticalAlign: "top", fontSize: "0.85rem", color: "#64748b" }}>
                         {item.createdAt
                           ? new Date(item.createdAt).toLocaleString("en-IN", {
                               day: "numeric",

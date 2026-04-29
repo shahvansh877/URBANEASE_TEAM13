@@ -28,7 +28,7 @@ const getSort = (sort) => {
 router.get("/providers/:category", async (req, res) => {
   try {
     const { category } = req.params;
-    const { sort = "createdAt", minRating, city } = req.query;
+    const { sort = "createdAt", minRating, city, q } = req.query;
 
     const mappedCategory = CATEGORY_MAP[category] || category;
 
@@ -36,8 +36,11 @@ router.get("/providers/:category", async (req, res) => {
       isVerified: true,
       verificationStatus: "approved",
       isActive: true,
-      serviceCategory: mappedCategory,
     };
+
+    if (category !== "all") {
+      filter.serviceCategory = mappedCategory;
+    }
 
     if (minRating) {
       filter.rating = { $gte: Number(minRating) || 0 };
@@ -45,6 +48,16 @@ router.get("/providers/:category", async (req, res) => {
 
     if (city) {
       filter.city = { $regex: city, $options: "i" };
+    }
+
+    if (q) {
+      const searchRegex = { $regex: q, $options: "i" };
+      filter.$or = [
+        { name: searchRegex },
+        { city: searchRegex },
+        { serviceCategory: searchRegex },
+        { serviceDescription: searchRegex },
+      ];
     }
 
     const providers = await ServiceProvider.find(filter)

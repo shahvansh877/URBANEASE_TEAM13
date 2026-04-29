@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut, Mail, Send, User, UserCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { SiteFooter } from "../components/SiteFooter";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -101,6 +102,11 @@ export function ContactUsPage() {
           background: rgba(7,20,50,0.7);
           backdrop-filter: blur(20px);
           border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .ue-nav-links {
+          display: flex !important;
+          align-items: center;
+          gap: 2rem;
         }
 
         .ue-contact-page {
@@ -292,6 +298,27 @@ export function ContactUsPage() {
         }
 
         @media (max-width: 640px) {
+          .ue-nav-inner {
+            height: auto !important;
+            min-height: 4rem;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+          }
+          .ue-nav-links {
+            order: 3;
+            width: 100%;
+            gap: 18px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+          }
+          .ue-nav-links::-webkit-scrollbar { display: none; }
+          .ue-nav-links a {
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
           .ue-page-wrap {
             padding: 96px 12px 40px;
           }
@@ -304,18 +331,19 @@ export function ContactUsPage() {
       `}</style>
 
       <nav className="nav-glass fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+        <div className="ue-nav-inner max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5 no-underline">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
               <span className="font-display text-white font-bold">U</span>
             </div>
             <span className="font-display text-white font-semibold text-lg">UrbanEase</span>
-          </div>
+          </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="ue-nav-links hidden md:flex items-center gap-8">
+            <Link to="/" className="text-blue-200 hover:text-white text-sm no-underline">Home</Link>
             <Link to="/#how-it-works" className="text-blue-200 hover:text-white text-sm no-underline">How It Works</Link>
-            <Link to="/" className="text-blue-200 hover:text-white text-sm no-underline">Services</Link>
-            <Link to="/contact" className="text-blue-200 hover:text-white text-sm no-underline">Contact</Link>
+            <Link to="/services" className="text-blue-200 hover:text-white text-sm no-underline">Services</Link>
+            <Link to="/contact" className="text-white text-sm font-semibold no-underline">Contact</Link>
             <Link to="/team" className="text-blue-200 hover:text-white text-sm no-underline">Team Detail</Link>
           </div>
 
@@ -448,6 +476,7 @@ export function ContactUsPage() {
           </form>
         </section>
       </div>
+      <SiteFooter />
     </div>
   );
 }

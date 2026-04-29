@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { createElement, useState, useEffect } from "react";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -184,6 +184,50 @@ const SHARED_CSS = `
   .avatar-provider { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
 
   .panel-enter { animation: ue-slide-in 0.2s ease both; }
+
+  @media (max-width: 768px) {
+    .mode-toggle {
+      width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .mode-toggle::-webkit-scrollbar { display: none; }
+    .mode-btn {
+      flex: 1 0 max-content;
+      justify-content: center;
+      padding: 9px 14px;
+    }
+    .ue-stat-card {
+      padding: 16px 14px;
+    }
+    .ue-pill {
+      flex: 1 1 calc(50% - 8px);
+      justify-content: center;
+      text-align: center;
+    }
+    .ue-btn {
+      justify-content: center;
+    }
+    .ue-card {
+      border-radius: 14px;
+    }
+    .ue-card > div {
+      padding-left: 14px !important;
+      padding-right: 14px !important;
+    }
+    .ue-tile-value {
+      overflow-wrap: anywhere;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .ue-stat-card {
+      padding: 14px 12px;
+    }
+    .ue-btn {
+      flex: 1 1 100%;
+    }
+  }
 `;
 
 /* ─── Navbar ─────────────────────────────────────────────────────────────── */
@@ -297,7 +341,7 @@ function StatCard({ label, value, icon: Icon, color, bg, delay = 0 }) {
   return (
     <div className="ue-stat-card" style={{ animationDelay: `${delay}ms` }}>
       <div style={{ width: 38, height: 38, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-        <Icon style={{ width: 18, height: 18, color }} />
+        {createElement(Icon, { style: { width: 18, height: 18, color } })}
       </div>
       <div style={{ fontFamily: T.serif, fontSize: "1.6rem", fontWeight: 700, color: T.color.text, lineHeight: 1 }}>{value ?? "—"}</div>
       <div style={{ fontSize: "0.72rem", color: T.color.faint, marginTop: 5, fontWeight: 500 }}>{label}</div>
@@ -309,7 +353,7 @@ function InfoTile({ icon: Icon, label, value }) {
   return (
     <div className="ue-tile">
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-        <Icon style={{ width: 12, height: 12, color: T.color.blue }} />
+        {createElement(Icon, { style: { width: 12, height: 12, color: T.color.blue } })}
         <span className="ue-tile-label">{label}</span>
       </div>
       <div className="ue-tile-value">{value || "—"}</div>
@@ -331,7 +375,7 @@ function StatusBadge({ statusStyle }) {
 function EmptyState({ icon: Icon, title, subtitle }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 20px", background: "white", borderRadius: 16, border: "1.5px solid #f1f5f9" }}>
-      <Icon style={{ width: 44, height: 44, color: "#cbd5e1", margin: "0 auto 14px" }} />
+      {createElement(Icon, { style: { width: 44, height: 44, color: "#cbd5e1", margin: "0 auto 14px" } })}
       <p style={{ fontWeight: 600, color: "#374151", marginBottom: 6 }}>{title}</p>
       <p style={{ fontSize: "0.85rem", color: T.color.faint }}>{subtitle}</p>
     </div>
@@ -412,7 +456,7 @@ function ProvidersPanel({ token }) {
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (data.success) setProviders(data.providers || []);
-    } catch { } finally { setLoading(false); }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   useEffect(() => {
@@ -494,7 +538,7 @@ function ProvidersPanel({ token }) {
               <button key={t.id}
                 className={`ue-pill ${tab === t.id ? "ue-pill-active" : "ue-pill-inactive"}`}
                 onClick={() => { setTab(t.id); setSearch(""); fetchByStatus(t.id); }}>
-                <Icon style={{ width: 13, height: 13 }} />
+                {createElement(Icon, { style: { width: 13, height: 13 } })}
                 {t.label}
                 {tab === t.id && providers.length > 0 && (
                   <span style={{ background: "rgba(255,255,255,0.25)", borderRadius: 20, padding: "1px 7px", fontSize: "0.7rem" }}>
@@ -548,7 +592,7 @@ function ProvidersPanel({ token }) {
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                       {[{ icon: Briefcase, text: p.serviceCategory }, { icon: MapPin, text: p.city }, { icon: Phone, text: p.phone }].map(({ icon: Icon, text }) => (
                         <span key={text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: T.color.muted }}>
-                          <Icon style={{ width: 12, height: 12 }} />{text}
+                          {createElement(Icon, { style: { width: 12, height: 12 } })}{text}
                         </span>
                       ))}
                     </div>
@@ -762,7 +806,7 @@ function UsersPanel({ token }) {
                 className={`ue-pill ${tab === t.id ? "ue-pill-active" : "ue-pill-inactive"}`}
                 style={tab === t.id ? { background: "#7c3aed", borderColor: "#7c3aed" } : {}}
                 onClick={() => { setTab(t.id); setSearch(""); fetchUsers(t.id); }}>
-                <Icon style={{ width: 13, height: 13 }} />
+                {createElement(Icon, { style: { width: 13, height: 13 } })}
                 {t.label}
                 {tab === t.id && users.length > 0 && (
                   <span style={{ background: "rgba(255,255,255,0.25)", borderRadius: 20, padding: "1px 7px", fontSize: "0.7rem" }}>
@@ -822,7 +866,7 @@ function UsersPanel({ token }) {
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                       {[{ icon: Mail, text: u.email }, { icon: Phone, text: u.phone || "—" }].map(({ icon: Icon, text }) => (
                         <span key={text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: T.color.muted }}>
-                          <Icon style={{ width: 12, height: 12 }} />{text}
+                          {createElement(Icon, { style: { width: 12, height: 12 } })}{text}
                         </span>
                       ))}
                     </div>

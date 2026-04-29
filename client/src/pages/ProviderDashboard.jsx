@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { createElement, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isBookingEvent, subscribeRealtime } from "../utils/realtime";
@@ -122,6 +122,39 @@ const SHARED_CSS = `
     color: #0f172a;
     font-weight: 500;
   }
+
+  @media (max-width: 768px) {
+    .ue-stat-card {
+      padding: 16px 14px;
+    }
+    .ue-pill {
+      flex: 1 1 calc(50% - 8px);
+      text-align: center;
+      justify-content: center;
+    }
+    .ue-btn {
+      justify-content: center;
+    }
+    .ue-card {
+      border-radius: 14px;
+    }
+    .ue-card > div {
+      padding-left: 14px !important;
+      padding-right: 14px !important;
+    }
+    .ue-tile-value {
+      overflow-wrap: anywhere;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .ue-stat-card {
+      padding: 14px 12px;
+    }
+    .ue-btn {
+      flex: 1 1 100%;
+    }
+  }
 `;
 
 /* ─── Shared Navbar ─────────────────────────────────────────────────────────── */
@@ -233,7 +266,7 @@ function StatCard({ label, value, icon: Icon, color, bg }) {
         background: bg, display: "flex", alignItems: "center",
         justifyContent: "center", marginBottom: 12,
       }}>
-        <Icon style={{ width: 18, height: 18, color }} />
+        {createElement(Icon, { style: { width: 18, height: 18, color } })}
       </div>
       <div style={{
         fontFamily: T.serif, fontSize: "1.6rem",
@@ -253,7 +286,7 @@ function InfoTile({ icon: Icon, label, value }) {
   return (
     <div className="ue-tile">
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-        <Icon style={{ width: 12, height: 12, color: T.color.blue }} />
+        {createElement(Icon, { style: { width: 12, height: 12, color: T.color.blue } })}
         <span className="ue-tile-label">{label}</span>
       </div>
       <div className="ue-tile-value">{value || "—"}</div>
@@ -285,7 +318,7 @@ function EmptyState({ icon: Icon, title, subtitle }) {
       background: "white", borderRadius: 16,
       border: "1.5px solid #f1f5f9",
     }}>
-      <Icon style={{ width: 44, height: 44, color: "#cbd5e1", margin: "0 auto 14px" }} />
+      {createElement(Icon, { style: { width: 44, height: 44, color: "#cbd5e1", margin: "0 auto 14px" } })}
       <p style={{ fontWeight: 600, color: "#374151", marginBottom: 6 }}>{title}</p>
       <p style={{ fontSize: "0.85rem", color: T.color.faint }}>{subtitle}</p>
     </div>
@@ -525,7 +558,7 @@ export function ProviderDashboard() {
                           { icon: MapPin,   text: (b.address?.slice(0, 30) || "") + (b.address?.length > 30 ? "..." : "") },
                         ].map(({ icon: Icon, text }) => (
                           <span key={text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: T.color.muted }}>
-                            <Icon style={{ width: 12, height: 12 }} />{text}
+                            {createElement(Icon, { style: { width: 12, height: 12 } })}{text}
                           </span>
                         ))}
                       </div>

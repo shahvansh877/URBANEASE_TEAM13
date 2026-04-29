@@ -1,5 +1,5 @@
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import {
   ArrowLeft, Download, MapPin, Clock, Calendar,
   Phone, Star, CheckCircle, Briefcase, FileText,
@@ -295,12 +295,29 @@ export function BookingConfirmationPage() {
         .igrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
         .dlbtn { display:flex; align-items:center; gap:8px; padding:13px 22px; border-radius:12px; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:white; border:none; cursor:pointer; font-size:0.875rem; font-weight:600; font-family:'DM Sans',sans-serif; box-shadow:0 4px 16px rgba(37,99,235,0.3); transition:all 0.2s; }
         .dlbtn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(37,99,235,0.4); }
-        @media(max-width:768px){ .clayout{ grid-template-columns:1fr !important; } .igrid{ grid-template-columns:1fr 1fr; } }
+        .confirm-nav { background:rgba(7,20,50,0.7); padding:0 20px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+        .confirm-nav-left { display:flex; align-items:center; gap:12px; min-width:0; }
+        .success-amount { text-align:right; }
+        .provider-row { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+        @media(max-width:768px){
+          .clayout{ grid-template-columns:1fr !important; }
+          .igrid{ grid-template-columns:1fr 1fr; }
+          .confirm-nav { height:auto; min-height:60px; padding:10px 12px; gap:10px; flex-wrap:wrap; }
+          .confirm-nav .dlbtn { padding:10px 14px; }
+        }
+        @media(max-width:560px){
+          .ccard { padding:18px 14px; border-radius:16px; }
+          .igrid{ grid-template-columns:1fr !important; }
+          .confirm-nav-left { width:100%; }
+          .confirm-nav .dlbtn { width:100%; justify-content:center; }
+          .success-amount { text-align:left; width:100%; }
+          .provider-row { align-items:flex-start; }
+        }
       `}</style>
 
       {/* Navbar */}
-      <div style={{ background:"rgba(7,20,50,0.7)", padding:"0 20px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:50 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+      <div className="confirm-nav">
+        <div className="confirm-nav-left">
           <button onClick={()=>navigate("/profile")} style={{ border:"1px solid rgba(255,255,255,0.2)", background:"rgba(255,255,255,0.08)", cursor:"pointer", display:"flex", alignItems:"center", gap:6, color:"rgba(255,255,255,0.8)", fontSize:"0.875rem", fontFamily:"'DM Sans',sans-serif", padding:"6px 12px", borderRadius:8 }}>
             <ArrowLeft style={{ width:16, height:16 }} /> Back
           </button>
@@ -325,7 +342,7 @@ export function BookingConfirmationPage() {
               ID: <strong>#{bookingId?.slice(-10).toUpperCase()}</strong> · Scheduled for <strong>{booking?.date}</strong> · <strong>{booking?.timeSlot}</strong>
             </div>
           </div>
-          <div style={{ textAlign:"right" }}>
+          <div className="success-amount">
             <div style={{ fontFamily:"'Fraunces',serif", fontSize:"1.8rem", fontWeight:700, color:"white" }}>₹{booking?.amount}</div>
             <div style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.7)" }}>
               {booking?.paymentStatus === "paid" ? "✓ Payment Received" : "Cash on Service"}
@@ -342,7 +359,7 @@ export function BookingConfirmationPage() {
               <div style={{ fontSize:"0.65rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", color:"#94a3b8", marginBottom:14, display:"flex", alignItems:"center", gap:6 }}>
                 <Briefcase style={{ width:12, height:12 }} /> Service Provider
               </div>
-              <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:16 }}>
+              <div className="provider-row">
                 <div style={{ width:54, height:54, borderRadius:14, background:"linear-gradient(135deg,#2563eb,#1d4ed8)", display:"flex", alignItems:"center", justifyContent:"center", color:"white", fontWeight:700, fontFamily:"'Fraunces',serif", fontSize:"1.2rem", flexShrink:0 }}>
                   {pName[0]}
                 </div>
@@ -354,7 +371,7 @@ export function BookingConfirmationPage() {
                   <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                     {[[Briefcase,pCat],[MapPin,pCity],[Phone,pPhone]].map(([I,t],i)=>(
                       <span key={i} style={{ display:"flex", alignItems:"center", gap:4, fontSize:"0.75rem", color:"#64748b" }}>
-                        <I style={{ width:12, height:12 }} />{t}
+                        {createElement(I, { style: { width:12, height:12 } })}{t}
                       </span>
                     ))}
                     <span style={{ display:"flex", alignItems:"center", gap:6, fontSize:"0.75rem", color:"#64748b" }}>

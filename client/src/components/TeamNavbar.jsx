@@ -41,7 +41,40 @@ export function TeamNavbar() {
 
   return (
     <nav className="nav-glass fixed top-0 left-0 right-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <style>{`
+        .team-nav-inner {
+          height: 4rem;
+        }
+        .team-nav-links {
+          display: flex !important;
+          align-items: center;
+          gap: 2rem;
+        }
+        @media (max-width: 768px) {
+          .team-nav-inner {
+            height: auto;
+            min-height: 4rem;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+          }
+          .team-nav-links {
+            order: 3;
+            width: 100%;
+            gap: 18px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+          }
+          .team-nav-links::-webkit-scrollbar { display: none; }
+          .team-nav-links a {
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+        }
+      `}</style>
+      <div className="team-nav-inner max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 no-underline">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
             <span className="font-display text-white font-bold">U</span>
@@ -49,7 +82,8 @@ export function TeamNavbar() {
           <span className="font-display text-white font-semibold text-lg">UrbanEase</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="team-nav-links hidden md:flex items-center gap-8">
+          <Link to="/" className="text-blue-200 hover:text-white text-sm no-underline">Home</Link>
           <Link to="/#how-it-works" className="text-blue-200 hover:text-white text-sm no-underline">How It Works</Link>
           <Link to="/services" className="text-blue-200 hover:text-white text-sm no-underline">Services</Link>
           <Link to="/contact" className="text-blue-200 hover:text-white text-sm no-underline">Contact</Link>

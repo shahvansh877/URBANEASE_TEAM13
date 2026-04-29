@@ -1,11 +1,12 @@
 import {
-  Search, Calendar, CheckCircle, Facebook, Twitter, Instagram, Linkedin,
-  Mail, Phone, MapPin, ArrowRight, Star, Shield, Clock, ChevronDown,
+  Search, Calendar, CheckCircle,
+  ArrowRight, Star, Shield, Clock, ChevronDown,
   UserCircle, LogOut, MessageSquare, X, Send, Settings, Globe
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { SiteFooter } from '../components/SiteFooter';
 const KB = {
   keywords: {
     about: ["urbanease", "urban ease", "what is urbanease", "about urbanease", "tell me about", "explain urbanease"],
@@ -79,12 +80,40 @@ const stats = [
   { value: '24/7', label: 'Support Available', icon: Clock },
 ];
 
+const HOME_SEARCH_CATEGORIES = [
+  { id: "cleaning", terms: ["cleaning", "cleaner", "deep cleaning", "sofa cleaning", "carpet cleaning"] },
+  { id: "plumbing", terms: ["plumbing", "plumber", "pipe", "tap", "leak", "drain"] },
+  { id: "electrical", terms: ["electrical", "electrician", "wiring", "fan", "switch", "mcb", "fuse"] },
+  { id: "carpentry", terms: ["carpentry", "carpenter", "furniture", "door", "cabinet", "wood"] },
+  { id: "painting", terms: ["painting", "painter", "paint", "wall painting", "waterproofing"] },
+  { id: "appliance_repair", terms: ["appliance", "appliance repair", "washing machine", "refrigerator", "microwave", "tv repair"] },
+  { id: "ac_repair", terms: ["ac", "ac repair", "ac service", "air conditioner", "gas refill"] },
+  { id: "pest_control", terms: ["pest", "pest control", "cockroach", "termite", "bed bug", "rodent"] },
+  { id: "gardening", terms: ["gardening", "garden", "lawn", "tree", "plant"] },
+  { id: "security", terms: ["security", "cctv", "alarm", "door lock"] },
+  { id: "interior_design", terms: ["interior", "interior design", "room design", "decor", "modular kitchen"] },
+  { id: "locksmith", terms: ["locksmith", "lock", "key", "key duplicate", "locker"] },
+  { id: "other", terms: ["other", "other services", "handyman"] },
+];
+
+function getSearchCategory(query) {
+  const normalized = query.toLowerCase().trim();
+  if (!normalized) return "";
+  const exactMatch = HOME_SEARCH_CATEGORIES.find((category) =>
+    category.terms.some((term) => normalized === term)
+  );
+  if (exactMatch) return exactMatch.id;
+  const partialMatch = HOME_SEARCH_CATEGORIES.find((category) =>
+    category.terms.some((term) => normalized.includes(term) || term.includes(normalized))
+  );
+  return partialMatch?.id || "";
+}
+
 export function HomePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const searchRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const videoRef = useRef(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -112,7 +141,19 @@ export function HomePage() {
   }, []);
 
   const handleSearchClick = () => {
-    if (searchRef.current) searchRef.current.focus();
+    const query = searchQuery.trim();
+    if (!query) {
+      if (searchRef.current) searchRef.current.focus();
+      return;
+    }
+
+    const matchedCategory = getSearchCategory(query);
+    if (matchedCategory) {
+      navigate(`/providers/${matchedCategory}?q=${encodeURIComponent(query)}`);
+      return;
+    }
+
+    navigate(`/providers/all?q=${encodeURIComponent(query)}`);
   };
 
   const handleServicesClick = () => {
@@ -282,6 +323,11 @@ export function HomePage() {
           backdrop-filter: blur(20px);
           border-bottom: 1px solid rgba(255,255,255,0.08);
         }
+        .ue-nav-links {
+          display: flex !important;
+          align-items: center;
+          gap: 2rem;
+        }
 
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(30px); }
@@ -420,6 +466,30 @@ export function HomePage() {
         .ue-chat-send-btn:hover { background: #1d4ed8; transform: scale(1.05); }
 
         /* Responsive Fixes */
+        @media (max-width: 768px) {
+          .ue-nav-inner {
+            height: auto !important;
+            min-height: 4rem;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+          }
+          .ue-nav-links {
+            order: 3;
+            width: 100%;
+            gap: 18px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+          }
+          .ue-nav-links::-webkit-scrollbar { display: none; }
+          .ue-nav-links a,
+          .ue-nav-links button {
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+        }
         @media (max-width: 480px) {
           .ue-chatbot-window {
             width: calc(100vw - 40px);
@@ -438,7 +508,7 @@ export function HomePage() {
 
       {/* ── Navbar ── */}
       <nav className="nav-glass fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="ue-nav-inner max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
               <span className="font-display text-white font-bold">U</span>
@@ -446,8 +516,9 @@ export function HomePage() {
             <span className="font-display text-white font-semibold text-lg">UrbanEase</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#how-it-works" className="text-blue-200 hover:text-white text-sm">How It Works</a>
+          <div className="ue-nav-links hidden md:flex items-center gap-8">
+            <Link to="/" className="text-blue-200 hover:text-white text-sm no-underline">Home</Link>
+            <Link to="/#how-it-works" className="text-blue-200 hover:text-white text-sm no-underline">How It Works</Link>
             <button onClick={handleServicesClick} className="text-blue-200 hover:text-white text-sm bg-transparent border-none cursor-pointer">Services</button>
             <Link to="/contact" className="text-blue-200 hover:text-white text-sm no-underline">Contact</Link>
             <Link to="/team" className="text-blue-200 hover:text-white text-sm no-underline">Team Detail</Link>
@@ -514,7 +585,7 @@ export function HomePage() {
             Connect with trusted local professionals for all your home service needs. From cleaning to repairs — we've got you covered.
           </p>
 
-          <div className="animate-fade-up search-bar rounded-2xl p-2 flex flex-col sm:flex-row items-center gap-2 max-w-2xl mx-auto mb-12">
+          <form onSubmit={(event) => { event.preventDefault(); handleSearchClick(); }} className="animate-fade-up search-bar rounded-2xl p-2 flex flex-col sm:flex-row items-center gap-2 max-w-2xl mx-auto mb-12">
             <div className="flex-1 flex items-center gap-3 px-4 w-full">
               <Search className="w-5 h-5 text-blue-300" />
               <input
@@ -522,14 +593,14 @@ export function HomePage() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="What service do you need?"
+                placeholder="Search service or provider name"
                 className="flex-1 bg-transparent border-none outline-none py-3 text-white placeholder-blue-200"
               />
             </div>
-            <button onClick={handleSearchClick} className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border-none shadow-lg">
+            <button type="submit" className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border-none shadow-lg">
               Search <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
+          </form>
         </div>
 
         <div className="absolute bottom-10 left-0 right-0 z-10 hidden md:block">
@@ -568,43 +639,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <footer id="footer" className="bg-[#0a0f1e] text-white py-16 px-4">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-12 border-b border-white/5 pb-10">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center font-bold text-xs">U</div>
-              <span className="font-bold text-lg font-display">UrbanEase</span>
-            </div>
-            <p className="text-sm text-gray-500">Your trusted partner for home services. Anytime, anywhere.</p>
-          </div>
-          <div className="space-y-4">
-            <h4 className="font-bold text-sm">Services</h4>
-            <ul className="list-none p-0 space-y-2 text-sm text-gray-400">
-              <li>Cleaning</li><li>Plumbing</li><li>Electrical</li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h4 className="font-bold text-sm">Legal</h4>
-            <ul className="list-none p-0 space-y-2 text-sm text-gray-400">
-              <li>Privacy Policy</li><li>Terms of Use</li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h4 className="font-bold text-sm">Contact</h4>
-            <Link to="/contact" className="text-sm text-gray-400 no-underline hover:text-white transition-colors">Contact Us</Link>
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto pt-8 flex justify-between items-center text-xs text-gray-600">
-          <p>© 2026 UrbanEase. All rights reserved.</p>
-          <div className="flex gap-4">
-            <Facebook className="w-4 h-4 hover:text-blue-500 cursor-pointer" />
-            <Twitter className="w-4 h-4 hover:text-blue-400 cursor-pointer" />
-            <Instagram className="w-4 h-4 hover:text-pink-500 cursor-pointer" />
-          </div>
-        </div>
-      </footer>
-
-
+      <SiteFooter />
       {/* ── Chatbot FAB ── */}
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
