@@ -12,6 +12,7 @@ import { ProvidersListPage } from "./pages/ProvidersListPage";
 import { BookingPage } from "./pages/BookingPage";
 import { PaymentPage } from "./pages/PaymentPage";
 import { UserAccountPages } from "./pages/UserAccountPages";
+import { ProfilePage } from "./pages/ProfilePage";
 import { AdminQueriesPage } from "./pages/AdminQueriesPage";
 
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -106,6 +107,10 @@ function useIsMobileViewport() {
 
 function ResponsiveAdminProfile() {
   return useIsMobileViewport() ? <AdminAccountPages /> : <AdminProfilePage />;
+}
+
+function ResponsiveUserProfile() {
+  return useIsMobileViewport() ? <UserAccountPages /> : <ProfilePage />;
 }
 
 function ResponsiveProviderProfile() {
@@ -233,7 +238,7 @@ export default function App() {
         path="/profile/*"
         element={
           <ProtectedRoute allowedRoles={["user"]}>
-            <UserAccountPages />
+            <ResponsiveUserProfile />
           </ProtectedRoute>
         }
       />
