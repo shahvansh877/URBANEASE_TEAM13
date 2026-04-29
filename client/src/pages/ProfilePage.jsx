@@ -385,6 +385,9 @@ export function ProfilePage() {
             <ArrowLeft style={{ width: 17, height: 17 }} /> Back
           </button>
           <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.25)" }} />
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontFamily: "'Fraunces', serif", flexShrink: 0 }}>
+            U
+          </div>
           <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: "white", fontSize: "1.05rem" }}>My Profile</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

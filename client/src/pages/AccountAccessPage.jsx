@@ -1,5 +1,5 @@
 import { Link, Navigate } from "react-router-dom";
-import { LogIn, UserPlus } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export function AccountAccessPage() {
@@ -17,14 +17,10 @@ export function AccountAccessPage() {
         <p style={{ margin: "8px 0 18px", color: "#64748b", fontSize: "0.92rem", lineHeight: 1.6 }}>
           Sign in to view your profile, bookings, saved addresses, payments, and logout controls.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <Link to="/login?redirect=/profile" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 12px", borderRadius: 12, background: "#2563eb", color: "white", textDecoration: "none", fontWeight: 700, fontSize: "0.88rem" }}>
+        <div>
+          <Link to="/login?redirect=/profile" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "12px 14px", borderRadius: 12, background: "#2563eb", color: "white", textDecoration: "none", fontWeight: 700, fontSize: "0.9rem" }}>
             <LogIn style={{ width: 16, height: 16 }} />
             Login
-          </Link>
-          <Link to="/signup?redirect=/profile" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 12px", borderRadius: 12, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", textDecoration: "none", fontWeight: 700, fontSize: "0.88rem" }}>
-            <UserPlus style={{ width: 16, height: 16 }} />
-            Sign Up
           </Link>
         </div>
       </div>

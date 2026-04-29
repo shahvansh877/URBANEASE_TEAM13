@@ -422,6 +422,9 @@ export function PaymentPage() {
           </>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontFamily: "'Fraunces',serif", flexShrink: 0 }}>
+            U
+          </div>
           <Wallet style={{ width: 18, height: 18, color: "#60a5fa" }} />
           <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, color: "white", fontSize: "1.05rem" }}>
             {step === "done" ? "Payment Successful" : "Secure Payment"}
