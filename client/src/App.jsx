@@ -1,5 +1,7 @@
 import { AdminAccountPages } from "./pages/AdminAccountPages";
 import { ProviderAccountPages } from "./pages/ProviderAccountPages";
+import { AdminProfilePage } from "./pages/AdminProfilePage";
+import { ProviderProfilePage } from "./pages/ProviderProfilePage";
 
 import { BookingConfirmationPage } from "./pages/BookingConfirmationPage";
 import { ProviderDashboard }       from "./pages/ProviderDashboard";
@@ -13,7 +15,7 @@ import { UserAccountPages } from "./pages/UserAccountPages";
 import { AdminQueriesPage } from "./pages/AdminQueriesPage";
 
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
@@ -74,6 +76,40 @@ function ScrollManager() {
   }, [pathname, hash, key]);
 
   return null;
+}
+
+function useIsMobileViewport() {
+  const getIsMobile = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 768px)").matches;
+
+  const [isMobile, setIsMobile] = useState(getIsMobile);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const media = window.matchMedia("(max-width: 768px)");
+    const handleChange = () => setIsMobile(media.matches);
+
+    handleChange();
+    if (media.addEventListener) {
+      media.addEventListener("change", handleChange);
+      return () => media.removeEventListener("change", handleChange);
+    }
+
+    media.addListener(handleChange);
+    return () => media.removeListener(handleChange);
+  }, []);
+
+  return isMobile;
+}
+
+function ResponsiveAdminProfile() {
+  return useIsMobileViewport() ? <AdminAccountPages /> : <AdminProfilePage />;
+}
+
+function ResponsiveProviderProfile() {
+  return useIsMobileViewport() ? <ProviderAccountPages /> : <ProviderProfilePage />;
 }
 
 
@@ -205,7 +241,7 @@ export default function App() {
         path="/admin-profile/*" 
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminAccountPages />
+            <ResponsiveAdminProfile />
           </ProtectedRoute>
         }
       />
@@ -220,7 +256,7 @@ export default function App() {
 
       <Route path="/provider-profile/*" element={
         <ProtectedRoute allowedRoles={["serviceProvider"]}>
-           <ProviderAccountPages />
+           <ResponsiveProviderProfile />
         </ProtectedRoute>
       } />
       <Route

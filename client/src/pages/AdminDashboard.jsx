@@ -68,12 +68,11 @@ const SHARED_CSS = `
     transition: all 0.2s;
     animation: ue-fade-in 0.3s ease both;
     min-width: 0;
-    min-height: 126px;
   }
   .ue-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); transform: translateY(-2px); }
   .admin-stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 14px;
     margin-bottom: 28px;
   }
@@ -407,11 +406,11 @@ function DashboardNav({ user, onLogout, onProfile, onGoHome, onQueries }) {
 function StatCard({ label, value, icon: Icon, color, bg, delay = 0 }) {
   return (
     <div className="ue-stat-card" style={{ animationDelay: `${delay}ms` }}>
-      <div style={{ width: 34, height: 34, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+      <div style={{ width: 38, height: 38, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
         {createElement(Icon, { style: { width: 18, height: 18, color } })}
       </div>
-      <div style={{ fontFamily: T.serif, fontSize: "clamp(1.35rem, 5vw, 1.6rem)", fontWeight: 700, color: T.color.text, lineHeight: 1 }}>{value ?? "—"}</div>
-      <div style={{ fontSize: "0.7rem", color: T.color.faint, marginTop: 5, fontWeight: 700, lineHeight: 1.25 }}>{label}</div>
+      <div style={{ fontFamily: T.serif, fontSize: "1.6rem", fontWeight: 700, color: T.color.text, lineHeight: 1 }}>{value ?? "—"}</div>
+      <div style={{ fontSize: "0.72rem", color: T.color.faint, marginTop: 6, fontWeight: 500, lineHeight: 1.25 }}>{label}</div>
     </div>
   );
 }
