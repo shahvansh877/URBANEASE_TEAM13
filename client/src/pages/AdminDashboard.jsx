@@ -214,10 +214,7 @@ const SHARED_CSS = `
       font-size: 0.98rem !important;
     }
     .admin-nav-actions {
-      margin-left: auto;
-      gap: 6px !important;
-      flex-wrap: wrap;
-      justify-content: flex-end;
+      display: none !important;
     }
     .admin-nav-action-label,
     .admin-account-name,

@@ -1,4 +1,4 @@
-import { AdminProfilePage }    from "./pages/AdminProfilePage";
+import { AdminAccountPages } from "./pages/AdminAccountPages";
 import { ProviderProfilePage } from "./pages/ProviderProfilePage";
 
 import { BookingConfirmationPage } from "./pages/BookingConfirmationPage";
@@ -202,10 +202,10 @@ export default function App() {
         }
       />
       <Route 
-        path="/admin-profile" 
+        path="/admin-profile/*" 
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminProfilePage />
+            <AdminAccountPages />
           </ProtectedRoute>
         }
       />
@@ -235,7 +235,7 @@ export default function App() {
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    {user?.role !== "admin" && user?.role !== "serviceProvider" ? <MobileBottomNav /> : null}
+    {user?.role !== "serviceProvider" ? <MobileBottomNav /> : null}
     </>
   );
 }
