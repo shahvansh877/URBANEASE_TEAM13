@@ -1,7 +1,7 @@
-const { getFromAddress, sendMailWithFallback } = require("./emailTransport");
+const { getFromHeader, sendMailWithFallback } = require("./emailTransport");
 
 const buildOtpMail = (toEmail, otp, role) => ({
-  from: `"UrbanEase" <${getFromAddress()}>`,
+  from: getFromHeader(),
   to: toEmail,
   subject: "UrbanEase - Your OTP Verification Code",
   html: `

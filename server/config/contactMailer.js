@@ -1,8 +1,8 @@
-const { getFromAddress, sendMailWithFallback } = require("./emailTransport");
+const { getFromAddress, getFromHeader, sendMailWithFallback } = require("./emailTransport");
 
 const sendContactConfirmationEmail = async ({ toEmail, name, query }) => {
   await sendMailWithFallback({
-    from: `"UrbanEase" <${getFromAddress()}>`,
+    from: getFromHeader(),
     to: toEmail,
     subject: "UrbanEase - We received your query",
     html: `
@@ -24,7 +24,7 @@ const sendContactConfirmationEmail = async ({ toEmail, name, query }) => {
 
 const sendContactNotificationEmail = async ({ name, email, query }) => {
   await sendMailWithFallback({
-    from: `"UrbanEase" <${getFromAddress()}>`,
+    from: getFromHeader(),
     to: getFromAddress(),
     replyTo: email,
     subject: `New contact query from ${name}`,
