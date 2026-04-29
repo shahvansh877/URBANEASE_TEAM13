@@ -185,6 +185,9 @@ const SHARED_CSS = `
       padding-left: 14px !important;
       padding-right: 14px !important;
     }
+    .provider-dashboard-bookings {
+      display: none !important;
+    }
     .ue-tile-value {
       overflow-wrap: anywhere;
     }
@@ -552,33 +555,34 @@ export function ProviderDashboard() {
           <StatCard label="Total Earnings" value={`₹${earnings}`}  icon={TrendingUp}  color="#0891b2" bg="#e0f2fe" />
         </div>
 
-        {/* Filter + Refresh */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {["all", "pending", "confirmed", "completed"].map(f => (
-              <button key={f}
-                className={`ue-pill ${filter === f ? "ue-pill-active" : "ue-pill-inactive"}`}
-                onClick={() => setFilter(f)}>
-                {f}
-              </button>
-            ))}
+        <div className="provider-dashboard-bookings">
+          {/* Filter + Refresh */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {["all", "pending", "confirmed", "completed"].map(f => (
+                <button key={f}
+                  className={`ue-pill ${filter === f ? "ue-pill-active" : "ue-pill-inactive"}`}
+                  onClick={() => setFilter(f)}>
+                  {f}
+                </button>
+              ))}
+            </div>
+            <button onClick={fetchBookings} className="ue-btn ue-btn-neutral">
+              <RefreshCw style={{ width: 14, height: 14 }} /> Refresh
+            </button>
           </div>
-          <button onClick={fetchBookings} className="ue-btn ue-btn-neutral">
-            <RefreshCw style={{ width: 14, height: 14 }} /> Refresh
-          </button>
-        </div>
 
-        <p style={{ color: T.color.faint, fontSize: "0.8rem", marginBottom: 14 }}>
-          {loading ? "Loading..." : `${filtered.length} booking${filtered.length !== 1 ? "s" : ""} found`}
-        </p>
+          <p style={{ color: T.color.faint, fontSize: "0.8rem", marginBottom: 14 }}>
+            {loading ? "Loading..." : `${filtered.length} booking${filtered.length !== 1 ? "s" : ""} found`}
+          </p>
 
-        {/* Bookings */}
-        {loading ? (
-          <LoadingState />
-        ) : filtered.length === 0 ? (
-          <EmptyState icon={Calendar} title="No bookings yet" subtitle="Your bookings from customers will appear here." />
-        ) : (
-          filtered.map(b => {
+          {/* Bookings */}
+          {loading ? (
+            <LoadingState />
+          ) : filtered.length === 0 ? (
+            <EmptyState icon={Calendar} title="No bookings yet" subtitle="Your bookings from customers will appear here." />
+          ) : (
+            filtered.map(b => {
             const st   = STATUS_STYLE[b.status] || STATUS_STYLE.pending;
             const open = expanded === b._id;
             return (
@@ -690,8 +694,9 @@ export function ProviderDashboard() {
                 )}
               </div>
             );
-          })
-        )}
+            })
+          )}
+        </div>
       </div>
     </div>
   );
