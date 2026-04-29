@@ -1,5 +1,5 @@
-import { AdminProfilePage }    from "./pages/Adminprofilepage";
-import { ProviderProfilePage } from "./pages/Providerprofilepage";
+import { AdminProfilePage }    from "./pages/AdminProfilePage";
+import { ProviderProfilePage } from "./pages/ProviderProfilePage";
 
 import { BookingConfirmationPage } from "./pages/BookingConfirmationPage";
 import { ProviderDashboard }       from "./pages/ProviderDashboard";
