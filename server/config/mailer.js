@@ -1,30 +1,4 @@
-const nodemailer = require("nodemailer");
-
-const SMTP_HOST = process.env.EMAIL_HOST || "smtp.gmail.com";
-const configuredPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : null;
-const smtpPorts = [...new Set([configuredPort, 587, 465].filter(Boolean))];
-const emailUser = () => process.env.EMAIL_USER?.trim();
-const emailPass = () => process.env.EMAIL_PASS?.replace(/\s/g, "");
-
-const getFromAddress = () => process.env.EMAIL_FROM?.trim() || emailUser();
-
-const createTransporter = (port) => nodemailer.createTransport({
-  host: SMTP_HOST,
-  port,
-  secure: port === 465,
-  requireTLS: port === 587,
-  family: 4,
-  connectionTimeout: 8000,
-  greetingTimeout: 8000,
-  socketTimeout: 12000,
-  auth: {
-    user: emailUser(),
-    pass: emailPass(),
-  },
-  tls: {
-    servername: SMTP_HOST,
-  },
-});
+const { getFromAddress, sendMailWithFallback } = require("./emailTransport");
 
 const buildOtpMail = (toEmail, otp, role) => ({
   from: `"UrbanEase" <${getFromAddress()}>`,
@@ -44,26 +18,7 @@ const buildOtpMail = (toEmail, otp, role) => ({
 });
 
 const sendOtpEmail = async (toEmail, otp, role = "User") => {
-  if (!emailUser() || !emailPass()) {
-    throw new Error("Email service is not configured. EMAIL_USER and EMAIL_PASS are required.");
-  }
-
-  let lastError = null;
-  const mail = buildOtpMail(toEmail, otp, role);
-
-  for (const port of smtpPorts) {
-    try {
-      const transporter = createTransporter(port);
-      const info = await transporter.sendMail(mail);
-      console.log(`OTP email accepted for ${toEmail} via ${SMTP_HOST}:${port}`, info.messageId || "");
-      return;
-    } catch (error) {
-      lastError = error;
-      console.error(`OTP email send failed on ${SMTP_HOST}:${port}:`, error.message);
-    }
-  }
-
-  throw new Error(lastError?.message || "Could not send OTP email");
+  await sendMailWithFallback(buildOtpMail(toEmail, otp, role), `OTP email for ${toEmail}`);
 };
 
 module.exports = { sendOtpEmail };

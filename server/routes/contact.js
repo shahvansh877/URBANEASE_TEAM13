@@ -5,6 +5,7 @@ const {
   sendContactConfirmationEmail,
   sendContactNotificationEmail,
 } = require("../config/contactMailer");
+const { getEmailConfigStatus } = require("../config/emailTransport");
 
 const router = express.Router();
 
@@ -22,6 +23,42 @@ router.get("/admin/list", protect, isAdmin, async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Unable to fetch contact queries right now",
+    });
+  }
+});
+
+router.post("/test-email", async (req, res) => {
+  try {
+    if (process.env.NODE_ENV === "production" && !process.env.EMAIL_TEST_KEY) {
+      return res.status(404).json({ success: false, message: "Route not found" });
+    }
+
+    if (process.env.EMAIL_TEST_KEY && req.headers["x-email-test-key"] !== process.env.EMAIL_TEST_KEY) {
+      return res.status(403).json({ success: false, message: "Invalid email test key" });
+    }
+
+    const email = req.body.email?.trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    await sendContactConfirmationEmail({
+      toEmail: email,
+      name: "UrbanEase Test",
+      query: "This is a test email from the deployed UrbanEase backend.",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Contact confirmation test email sent successfully.",
+      emailConfig: getEmailConfigStatus(),
+    });
+  } catch (error) {
+    console.error("Contact test email error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      emailConfig: getEmailConfigStatus(),
     });
   }
 });

@@ -1,52 +1,4 @@
-const nodemailer = require("nodemailer");
-
-const SMTP_HOST = process.env.EMAIL_HOST || "smtp.gmail.com";
-const configuredPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : null;
-const smtpPorts = [...new Set([configuredPort, 587, 465].filter(Boolean))];
-const emailUser = () => process.env.EMAIL_USER?.trim();
-const emailPass = () => process.env.EMAIL_PASS?.replace(/\s/g, "");
-
-const getFromAddress = () => process.env.EMAIL_FROM?.trim() || emailUser();
-
-const createTransporter = (port) => nodemailer.createTransport({
-  host: SMTP_HOST,
-  port,
-  secure: port === 465,
-  requireTLS: port === 587,
-  family: 4,
-  connectionTimeout: 8000,
-  greetingTimeout: 8000,
-  socketTimeout: 12000,
-  auth: {
-    user: emailUser(),
-    pass: emailPass(),
-  },
-  tls: {
-    servername: SMTP_HOST,
-  },
-});
-
-const sendMailWithFallback = async (mailOptions, label) => {
-  if (!emailUser() || !emailPass()) {
-    throw new Error("Email service is not configured. EMAIL_USER and EMAIL_PASS are required.");
-  }
-
-  let lastError = null;
-
-  for (const port of smtpPorts) {
-    try {
-      const transporter = createTransporter(port);
-      const info = await transporter.sendMail(mailOptions);
-      console.log(`${label} email accepted via ${SMTP_HOST}:${port}`, info.messageId || "");
-      return;
-    } catch (error) {
-      lastError = error;
-      console.error(`${label} email failed on ${SMTP_HOST}:${port}:`, error.message);
-    }
-  }
-
-  throw new Error(lastError?.message || `Could not send ${label} email`);
-};
+const { getFromAddress, sendMailWithFallback } = require("./emailTransport");
 
 const sendContactConfirmationEmail = async ({ toEmail, name, query }) => {
   await sendMailWithFallback({
@@ -67,7 +19,7 @@ const sendContactConfirmationEmail = async ({ toEmail, name, query }) => {
         <p style="margin:0;color:#6b7280;font-size:14px;">Thank you for reaching out to UrbanEase.</p>
       </div>
     `,
-  }, "Contact confirmation");
+  }, `Contact confirmation for ${toEmail}`);
 };
 
 const sendContactNotificationEmail = async ({ name, email, query }) => {
@@ -86,7 +38,7 @@ const sendContactNotificationEmail = async ({ name, email, query }) => {
         </div>
       </div>
     `,
-  }, "Contact notification");
+  }, `Contact notification from ${email}`);
 };
 
 module.exports = {
