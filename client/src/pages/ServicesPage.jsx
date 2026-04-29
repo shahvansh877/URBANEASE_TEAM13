@@ -69,7 +69,26 @@ export function ServicesPage() {
         .ue-nav-links { display:flex !important; align-items:center; gap:2rem; }
         @media(max-width:640px){
           .cat-grid { grid-template-columns:1fr 1fr !important; gap:12px !important; }
-          .cat-card { padding:14px 12px; }
+          .cat-card {
+            min-height: 132px;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 10px;
+            text-align: center;
+            border-radius: 14px;
+          }
+          .cat-card:hover { transform: none; }
+          .cat-icon-wrap {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+          }
+          .cat-card > div:nth-child(2) > div:nth-child(2),
+          .cat-card > div:nth-child(2) > div:nth-child(3),
+          .cat-card > div:last-child {
+            display: none !important;
+          }
           .ue-nav-inner { height:auto !important; min-height:4rem; flex-wrap:wrap; gap:10px; padding-top:10px; padding-bottom:10px; }
           .ue-nav-links { order:3; width:100%; gap:18px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
           .ue-nav-links::-webkit-scrollbar { display:none; }

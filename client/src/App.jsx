@@ -23,6 +23,7 @@ import { TeamPage } from "./pages/TeamPage";
 import { AddMemberPage } from "./pages/AddMemberPage";
 import { ViewMembersPage } from "./pages/ViewMembersPage";
 import { MemberDetailsPage } from "./pages/MemberDetailsPage";
+import { MobileBottomNav } from "./components/MobileBottomNav";
 
 function LoadingScreen() {
   return (
@@ -232,6 +233,7 @@ export default function App() {
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    {user?.role !== "admin" && user?.role !== "serviceProvider" ? <MobileBottomNav /> : null}
     </>
   );
 }

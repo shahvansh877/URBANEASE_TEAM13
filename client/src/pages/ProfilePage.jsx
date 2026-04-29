@@ -6,7 +6,8 @@ import { API_BASE_URL as API } from "../config/api";
 import {
   User, Mail, Phone, MapPin, Calendar, Clock,
   LogOut, Edit2, Check, X, Package, ArrowLeft,
-  ChevronRight, Sparkles, ChevronDown, Trash2, Star, MessageSquare
+  ChevronRight, Sparkles, ChevronDown, Trash2, Star, MessageSquare,
+  HelpCircle, UsersRound
 } from "lucide-react";
 
 const STATUS_STYLE = {
@@ -216,6 +217,15 @@ export function ProfilePage() {
     { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length,   filter: "cancelled" },
   ];
 
+  const quickNavItems = [
+    { label: "Browse Services", path: "/services", icon: Sparkles },
+    { label: "My Bookings", icon: Package },
+    { label: "Help Center", path: "/contact", icon: HelpCircle },
+    { label: "Team Detail", path: "/team", icon: UsersRound },
+    { label: "Edit Account", icon: User, action: () => setIsEditing(true) },
+    { label: "Logout", icon: LogOut, action: logout, danger: true },
+  ];
+
   return (
     <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
@@ -292,6 +302,23 @@ export function ProfilePage() {
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
         }
         @media (max-width: 480px) {
+          .nav-top {
+            height: 58px;
+            padding: 0 14px;
+          }
+          .nav-top > div:last-child > button {
+            display: none !important;
+          }
+          .profile-page-wrap {
+            padding: 18px 14px 24px !important;
+          }
+          .profile-quick-nav {
+            border-radius: 0 !important;
+            border-left: none !important;
+            border-right: none !important;
+            margin-left: -14px;
+            margin-right: -14px;
+          }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .booking-row { padding: 16px 14px; }
           .booking-row > div:first-child,
@@ -370,7 +397,7 @@ export function ProfilePage() {
         </div>
       </nav>
 
-      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px" }}>
+      <div className="profile-page-wrap" style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px" }}>
         <div className="main-grid" style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 20, alignItems: "start" }}>
 
           {/* ── LEFT: Profile Card ── */}
@@ -465,21 +492,21 @@ export function ProfilePage() {
             </div>
 
             {/* Quick nav */}
-            <div style={{ background: "white", borderRadius: 16, border: "1.5px solid #f1f5f9", overflow: "hidden" }}>
-              {[
-                { label: "Browse Services", path: "/services", icon: Sparkles },
-                { label: "My Bookings", path: null, icon: Package },
-              ].map(({ label, path, icon: Icon }, i) => (
+            <div className="profile-quick-nav" style={{ background: "white", borderRadius: 16, border: "1.5px solid #f1f5f9", overflow: "hidden" }}>
+              {quickNavItems.map(({ label, path, icon: Icon, action, danger }, i) => (
                 <div key={label}
-                  onClick={() => path && navigate(path)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", cursor: path ? "pointer" : "default", borderBottom: i === 0 ? "1px solid #f1f5f9" : "none", transition: "background 0.15s" }}
-                  onMouseEnter={e => path && (e.currentTarget.style.background = "#f8fafc")}
+                  onClick={() => {
+                    if (action) action();
+                    if (path) navigate(path);
+                  }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px 18px", cursor: path || action ? "pointer" : "default", borderBottom: i < quickNavItems.length - 1 ? "1px solid #f1f5f9" : "none", transition: "background 0.15s" }}
+                  onMouseEnter={e => (path || action) && (e.currentTarget.style.background = "#f8fafc")}
                   onMouseLeave={e => (e.currentTarget.style.background = "white")}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    {createElement(Icon, { style: { width: 16, height: 16, color: "#2563eb" } })}
-                    <span style={{ fontSize: "0.875rem", color: "#374151", fontWeight: 500 }}>{label}</span>
+                    {createElement(Icon, { style: { width: 17, height: 17, color: danger ? "#ef4444" : "#2563eb" } })}
+                    <span style={{ fontSize: "0.895rem", color: danger ? "#ef4444" : "#374151", fontWeight: 500 }}>{label}</span>
                   </div>
-                  {path && <ChevronRight style={{ width: 15, height: 15, color: "#94a3b8" }} />}
+                  {(path || action) && !danger && <ChevronRight style={{ width: 15, height: 15, color: "#94a3b8" }} />}
                 </div>
               ))}
             </div>
