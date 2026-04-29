@@ -155,6 +155,9 @@ export function ProvidersListPage() {
           <ArrowLeft style={{ width: 18, height: 18 }} /> Back
         </button>
         <div style={{ width: 1, height: 20, background: "#e2e8f0" }} />
+        <div style={{ width: 32, height: 32, borderRadius: 10, background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontFamily: "'Fraunces', serif", flexShrink: 0 }}>
+          U
+        </div>
         <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: "#0f172a", fontSize: "1.05rem" }}>
           {CATEGORY_NAMES[category] || "Services"}
         </span>

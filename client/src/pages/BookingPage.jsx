@@ -217,6 +217,7 @@ export function BookingPage() {
           <ArrowLeft style={{ width:16, height:16 }} /> Back
         </button>
         <span style={{ color:"rgba(255,255,255,0.3)" }}>|</span>
+        <div style={{ width:32, height:32, borderRadius:10, background:"#2563eb", display:"flex", alignItems:"center", justifyContent:"center", color:"white", fontWeight:800, fontFamily:"'Fraunces',serif", flexShrink:0 }}>U</div>
         <span style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"white" }}>Book Service</span>
       </div>
 

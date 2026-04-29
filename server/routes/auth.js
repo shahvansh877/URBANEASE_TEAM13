@@ -390,6 +390,7 @@ router.get("/me", protect, async (req, res) => {
 router.put("/update-profile", protect, async (req, res) => {
   try {
     const { name, phone, address, city, experience, serviceDescription } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
     const roleModel = { user: User, serviceProvider: ServiceProvider, admin: Admin }[req.userRole];
 
     if (!roleModel) return res.status(400).json({ success: false, message: "Invalid account role" });
@@ -401,6 +402,13 @@ router.put("/update-profile", protect, async (req, res) => {
       const trimmedName = name.trim();
       if (!trimmedName) return res.status(400).json({ success: false, message: "Name is required" });
       account.name = trimmedName;
+    }
+
+    if (email && email !== account.email) {
+      if (await isEmailTaken(email)) {
+        return res.status(400).json({ success: false, message: "Email already registered" });
+      }
+      account.email = email;
     }
 
     if (req.userRole === "user") {

@@ -9,7 +9,7 @@ import { ServicesPage } from "./pages/ServicesPage";
 import { ProvidersListPage } from "./pages/ProvidersListPage";
 import { BookingPage } from "./pages/BookingPage";
 import { PaymentPage } from "./pages/PaymentPage";
-import { ProfilePage } from "./pages/ProfilePage";
+import { UserAccountPages } from "./pages/UserAccountPages";
 import { AdminQueriesPage } from "./pages/AdminQueriesPage";
 
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -194,10 +194,10 @@ export default function App() {
       />
 
       <Route
-        path="/profile"
+        path="/profile/*"
         element={
           <ProtectedRoute allowedRoles={["user"]}>
-            <ProfilePage />
+            <UserAccountPages />
           </ProtectedRoute>
         }
       />
