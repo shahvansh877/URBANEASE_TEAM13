@@ -148,9 +148,11 @@ const SHARED_CSS = `
       flex: 1 1 auto;
       gap: 8px !important;
     }
-    .provider-nav-brand-title,
     .provider-account-name {
       display: none;
+    }
+    .provider-nav-actions {
+      display: none !important;
     }
     .provider-account-button {
       padding: 5px 8px 5px 5px !important;

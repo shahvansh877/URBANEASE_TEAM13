@@ -1,5 +1,5 @@
 import { AdminAccountPages } from "./pages/AdminAccountPages";
-import { ProviderProfilePage } from "./pages/ProviderProfilePage";
+import { ProviderAccountPages } from "./pages/ProviderAccountPages";
 
 import { BookingConfirmationPage } from "./pages/BookingConfirmationPage";
 import { ProviderDashboard }       from "./pages/ProviderDashboard";
@@ -218,9 +218,9 @@ export default function App() {
         }
       />
 
-      <Route path="/provider-profile" element={
+      <Route path="/provider-profile/*" element={
         <ProtectedRoute allowedRoles={["serviceProvider"]}>
-           <ProviderProfilePage />
+           <ProviderAccountPages />
         </ProtectedRoute>
       } />
       <Route
@@ -235,7 +235,7 @@ export default function App() {
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    {user?.role !== "serviceProvider" ? <MobileBottomNav /> : null}
+    <MobileBottomNav />
     </>
   );
 }

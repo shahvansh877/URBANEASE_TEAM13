@@ -1,4 +1,4 @@
-import { Headphones, Home, Inbox, LayoutDashboard, Search, UserRound } from "lucide-react";
+import { Banknote, BriefcaseBusiness, Headphones, Home, Inbox, LayoutDashboard, Search, UserRound } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -15,11 +15,22 @@ const ADMIN_NAV_ITEMS = [
   { label: "Account", icon: UserRound, path: "/admin-profile", match: ["/admin-profile"] },
 ];
 
+const PROVIDER_NAV_ITEMS = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "/provider-dashboard", match: ["/provider-dashboard"] },
+  { label: "Bookings", icon: BriefcaseBusiness, path: "/provider-profile/bookings", match: ["/provider-profile/bookings"] },
+  { label: "Earnings", icon: Banknote, path: "/provider-profile/earnings", match: ["/provider-profile/earnings"] },
+  { label: "Account", icon: UserRound, path: "/provider-profile", match: ["/provider-profile"] },
+];
+
 export function MobileBottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const items = user?.role === "admin" ? ADMIN_NAV_ITEMS : NAV_ITEMS;
+  const items = user?.role === "admin"
+    ? ADMIN_NAV_ITEMS
+    : user?.role === "serviceProvider"
+    ? PROVIDER_NAV_ITEMS
+    : NAV_ITEMS;
 
   const goTo = (item) => {
     if (item.label === "Account" && user?.role === "user") {
@@ -37,7 +48,9 @@ export function MobileBottomNav() {
     >
       {items.map((item) => {
         const Icon = item.icon;
-        const active = item.label === "Account"
+        const active = item.label === "Account" && user?.role === "serviceProvider"
+          ? pathname === "/provider-profile" || pathname === "/provider-profile/edit"
+          : item.label === "Account"
           ? item.match.some((path) => pathname.startsWith(path))
           : item.match
           ? item.match.some((path) => (path === "/" ? pathname === "/" : pathname.startsWith(path)))
