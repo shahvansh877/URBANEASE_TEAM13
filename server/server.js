@@ -12,27 +12,43 @@ const app = express();
 app.set("realtime", realtime);
 
 // CORS setup
-const allowedOrigins = [
+const configuredOrigins = [
   "http://localhost:5173",
+  "https://urbannease.netlify.app",
   "https://urbannease.vercel.app",
-  ...(process.env.CLIENT_URL || "")
+  "https://urbanease.vercel.app",
+  ...(process.env.CLIENT_URL || process.env.CLIENT_URLS || process.env.FRONTEND_URL || "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
 ];
+
+const normalizeOrigin = (origin) => origin.replace(/\/$/, "");
+const allowedOrigins = new Set(configuredOrigins.map(normalizeOrigin));
+const isAllowedOrigin = (origin) => {
+  const normalizedOrigin = normalizeOrigin(origin);
+
+  return (
+    allowedOrigins.has(normalizedOrigin) ||
+    /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(normalizedOrigin)
+  );
+};
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests from Postman, mobile apps, or same-origin requests
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
 
     return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
 }));
 
 app.use(express.json());
