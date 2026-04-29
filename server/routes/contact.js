@@ -52,10 +52,8 @@ router.post("/", async (req, res) => {
     let emailSent = true;
 
     try {
-      await Promise.all([
-        sendContactConfirmationEmail({ toEmail: email, name, query }),
-        sendContactNotificationEmail({ name, email, query }),
-      ]);
+      await sendContactConfirmationEmail({ toEmail: email, name, query });
+      await sendContactNotificationEmail({ name, email, query });
     } catch (mailError) {
       emailSent = false;
       console.error("Contact confirmation email error:", mailError);

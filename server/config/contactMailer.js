@@ -1,26 +1,55 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+const SMTP_HOST = process.env.EMAIL_HOST || "smtp.gmail.com";
+const configuredPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : null;
+const smtpPorts = [...new Set([configuredPort, 587, 465].filter(Boolean))];
+const emailUser = () => process.env.EMAIL_USER?.trim();
+const emailPass = () => process.env.EMAIL_PASS?.replace(/\s/g, "");
+
+const getFromAddress = () => process.env.EMAIL_FROM?.trim() || emailUser();
+
+const createTransporter = (port) => nodemailer.createTransport({
+  host: SMTP_HOST,
+  port,
+  secure: port === 465,
+  requireTLS: port === 587,
   family: 4,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
+  connectionTimeout: 8000,
+  greetingTimeout: 8000,
+  socketTimeout: 12000,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: emailUser(),
+    pass: emailPass(),
   },
   tls: {
-    servername: "smtp.gmail.com",
+    servername: SMTP_HOST,
   },
 });
 
-const getFromAddress = () => process.env.EMAIL_FROM || process.env.EMAIL_USER;
+const sendMailWithFallback = async (mailOptions, label) => {
+  if (!emailUser() || !emailPass()) {
+    throw new Error("Email service is not configured. EMAIL_USER and EMAIL_PASS are required.");
+  }
+
+  let lastError = null;
+
+  for (const port of smtpPorts) {
+    try {
+      const transporter = createTransporter(port);
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`${label} email accepted via ${SMTP_HOST}:${port}`, info.messageId || "");
+      return;
+    } catch (error) {
+      lastError = error;
+      console.error(`${label} email failed on ${SMTP_HOST}:${port}:`, error.message);
+    }
+  }
+
+  throw new Error(lastError?.message || `Could not send ${label} email`);
+};
 
 const sendContactConfirmationEmail = async ({ toEmail, name, query }) => {
-  await transporter.sendMail({
+  await sendMailWithFallback({
     from: `"UrbanEase" <${getFromAddress()}>`,
     to: toEmail,
     subject: "UrbanEase - We received your query",
@@ -38,13 +67,14 @@ const sendContactConfirmationEmail = async ({ toEmail, name, query }) => {
         <p style="margin:0;color:#6b7280;font-size:14px;">Thank you for reaching out to UrbanEase.</p>
       </div>
     `,
-  });
+  }, "Contact confirmation");
 };
 
 const sendContactNotificationEmail = async ({ name, email, query }) => {
-  await transporter.sendMail({
+  await sendMailWithFallback({
     from: `"UrbanEase" <${getFromAddress()}>`,
     to: getFromAddress(),
+    replyTo: email,
     subject: `New contact query from ${name}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:16px;background:#ffffff;">
@@ -56,7 +86,7 @@ const sendContactNotificationEmail = async ({ name, email, query }) => {
         </div>
       </div>
     `,
-  });
+  }, "Contact notification");
 };
 
 module.exports = {
