@@ -1,4 +1,4 @@
-const { getFromHeader, sendMailWithFallback } = require("./emailTransport");
+const { getFromHeader, sendEmail } = require("./emailTransport");
 
 const buildOtpMail = (toEmail, otp, role) => ({
   from: getFromHeader(),
@@ -18,7 +18,7 @@ const buildOtpMail = (toEmail, otp, role) => ({
 });
 
 const sendOtpEmail = async (toEmail, otp, role = "User") => {
-  await sendMailWithFallback(buildOtpMail(toEmail, otp, role), `OTP email for ${toEmail}`);
+  await sendEmail(buildOtpMail(toEmail, otp, role), `OTP email for ${toEmail}`);
 };
 
 module.exports = { sendOtpEmail };

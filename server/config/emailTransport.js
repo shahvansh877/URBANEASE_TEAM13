@@ -1,60 +1,9 @@
-const nodemailer = require("nodemailer");
+const Brevo = require("@getbrevo/brevo");
 
-const SMTP_HOST = (process.env.SMTP_HOST || process.env.EMAIL_HOST)?.trim() || "smtp.gmail.com";
-const configuredPortValue = process.env.SMTP_PORT || process.env.EMAIL_PORT;
-const configuredPort = configuredPortValue ? Number(configuredPortValue) : null;
-const smtpPorts = [...new Set([configuredPort, 587, 465].filter(Boolean))];
-const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
-const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
-
-const emailUser = () => (process.env.SMTP_USER || process.env.EMAIL_USER)?.trim();
-const emailPass = () => (process.env.SMTP_PASS || process.env.EMAIL_PASS)?.replace(/\s/g, "");
-const brevoApiKey = () => process.env.BREVO_API_KEY?.trim();
-const getFromAddress = () => process.env.EMAIL_FROM?.trim() || emailUser();
-const getFromHeader = () => {
-  const from = getFromAddress();
-  if (!from) return "";
-  return from.includes("<") ? from : `"UrbanEase" <${from}>`;
-};
-const getEmailProvider = () => {
-  if (EMAIL_PROVIDER) return EMAIL_PROVIDER;
-  if (brevoApiKey()) return "brevo";
-  return "smtp";
-};
-
-const createTransporter = (port) => nodemailer.createTransport({
-  host: SMTP_HOST,
-  port,
-  secure: port === 465,
-  requireTLS: port === 587,
-  family: 4,
-  connectionTimeout: 12000,
-  greetingTimeout: 12000,
-  socketTimeout: 20000,
-  auth: {
-    user: emailUser(),
-    pass: emailPass(),
-  },
-  tls: {
-    servername: SMTP_HOST,
-  },
-});
-
-const getEmailConfigStatus = () => ({
-  provider: getEmailProvider(),
-  host: SMTP_HOST,
-  ports: smtpPorts,
-  userConfigured: Boolean(emailUser()),
-  passConfigured: Boolean(emailPass()),
-  brevoConfigured: Boolean(brevoApiKey()),
-  from: getFromAddress(),
-  fromHeader: getFromHeader(),
-});
-
-const normalizeRecipients = (recipients) => {
-  if (Array.isArray(recipients)) return recipients;
-  return recipients ? [recipients] : [];
-};
+const getEmailProvider = () => process.env.EMAIL_PROVIDER?.trim().toLowerCase() || "brevo_api";
+const getBrevoApiKey = () => process.env.BREVO_API_KEY?.trim();
+const getFromName = () => process.env.EMAIL_FROM_NAME?.trim() || "UrbanEase";
+const getFromEmail = () => process.env.EMAIL_FROM_EMAIL?.trim() || process.env.EMAIL_FROM?.trim();
 
 const parseEmailAddress = (value) => {
   const text = value?.trim();
@@ -71,103 +20,104 @@ const parseEmailAddress = (value) => {
   return { email: text };
 };
 
+const normalizeRecipients = (recipients) => {
+  if (Array.isArray(recipients)) return recipients;
+  return recipients ? [recipients] : [];
+};
+
 const toBrevoRecipients = (recipients) => (
   normalizeRecipients(recipients)
-    .map(parseEmailAddress)
-    .filter(Boolean)
+    .map((recipient) => (typeof recipient === "string" ? parseEmailAddress(recipient) : recipient))
+    .filter((recipient) => recipient?.email)
 );
 
-const sendMailWithBrevo = async (mailOptions, label) => {
-  if (!brevoApiKey()) {
+const getFromAddress = () => getFromEmail();
+
+const getFromHeader = () => {
+  const email = getFromEmail();
+  if (!email) return "";
+  return `"${getFromName()}" <${email}>`;
+};
+
+const createBrevoClient = () => {
+  const apiKey = getBrevoApiKey();
+  if (!apiKey) {
     throw new Error("Brevo email service is not configured. BREVO_API_KEY is required.");
   }
-  if (!getFromAddress()) {
-    throw new Error("Brevo email service is not configured. EMAIL_FROM is required.");
-  }
-  if (typeof fetch !== "function") {
-    throw new Error("Brevo email service requires Node.js 18 or newer for fetch support.");
+
+  const client = new Brevo.TransactionalEmailsApi();
+
+  if (typeof client.setApiKey === "function" && Brevo.TransactionalEmailsApiApiKeys?.apiKey) {
+    client.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
+  } else if (client.authentications?.apiKey) {
+    client.authentications.apiKey.apiKey = apiKey;
+  } else {
+    throw new Error("Brevo SDK authentication could not be configured.");
   }
 
-  const sender = parseEmailAddress(mailOptions.from || getFromHeader());
+  return client;
+};
+
+const getEmailConfigStatus = () => ({
+  provider: getEmailProvider(),
+  brevoConfigured: Boolean(getBrevoApiKey()),
+  fromName: getFromName(),
+  fromEmail: getFromEmail(),
+});
+
+const sendEmail = async (mailOptions, label = "Email") => {
+  if (getEmailProvider() !== "brevo_api") {
+    throw new Error("Email provider must be set to EMAIL_PROVIDER=brevo_api for Brevo API delivery.");
+  }
+
+  const fromEmail = getFromEmail();
+  if (!fromEmail) {
+    throw new Error("Brevo email service is not configured. EMAIL_FROM_EMAIL is required.");
+  }
+
   const to = toBrevoRecipients(mailOptions.to);
-
-  if (!sender?.email) {
-    throw new Error("Brevo email service is not configured. EMAIL_FROM must be a valid sender email.");
-  }
   if (!to.length) {
     throw new Error(`${label} could not be sent because no recipient email was provided.`);
   }
 
-  const payload = {
-    sender,
-    to,
-    subject: mailOptions.subject,
-    htmlContent: mailOptions.html,
-    textContent: mailOptions.text,
+  const message = new Brevo.SendSmtpEmail();
+  message.sender = {
+    name: getFromName(),
+    email: fromEmail,
   };
+  message.to = to;
+  message.subject = mailOptions.subject;
+  message.htmlContent = mailOptions.html;
+  message.textContent = mailOptions.text;
 
-  if (mailOptions.replyTo) payload.replyTo = parseEmailAddress(mailOptions.replyTo);
-  if (mailOptions.cc) payload.cc = toBrevoRecipients(mailOptions.cc);
-  if (mailOptions.bcc) payload.bcc = toBrevoRecipients(mailOptions.bcc);
-
-  const response = await fetch(BREVO_API_URL, {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "api-key": brevoApiKey(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const message = data?.message || data?.error?.message || `${label} could not be sent via Brevo`;
-    throw new Error(message);
+  if (mailOptions.replyTo) {
+    message.replyTo = parseEmailAddress(mailOptions.replyTo);
+  }
+  if (mailOptions.cc) {
+    message.cc = toBrevoRecipients(mailOptions.cc);
+  }
+  if (mailOptions.bcc) {
+    message.bcc = toBrevoRecipients(mailOptions.bcc);
   }
 
-  console.log(`${label} accepted via Brevo API`, data.messageId || "");
-  return data;
-};
+  const client = createBrevoClient();
 
-const sendMailWithSmtp = async (mailOptions, label) => {
-  if (!emailUser() || !emailPass()) {
-    throw new Error("Email service is not configured. EMAIL_USER and EMAIL_PASS are required.");
+  try {
+    const response = await client.sendTransacEmail(message);
+    const body = response?.body || response;
+    console.log(`${label} accepted via Brevo API`, body?.messageId || "");
+    return body;
+  } catch (error) {
+    const brevoMessage = error?.body?.message || error?.response?.body?.message || error.message;
+    console.error(`${label} failed via Brevo API:`, brevoMessage);
+    throw new Error(brevoMessage || `${label} could not be sent via Brevo API`);
   }
-
-  let lastError = null;
-
-  for (const port of smtpPorts) {
-    try {
-      const transporter = createTransporter(port);
-      const info = await transporter.sendMail({
-        ...mailOptions,
-        from: mailOptions.from || getFromHeader(),
-      });
-
-      console.log(`${label} accepted via ${SMTP_HOST}:${port}`, info.messageId || "");
-      return info;
-    } catch (error) {
-      lastError = error;
-      console.error(`${label} failed via ${SMTP_HOST}:${port}:`, error.message);
-    }
-  }
-
-  throw new Error(lastError?.message || `${label} could not be sent`);
-};
-
-const sendMailWithFallback = async (mailOptions, label = "Email") => {
-  if (getEmailProvider() === "brevo") {
-    return sendMailWithBrevo(mailOptions, label);
-  }
-
-  return sendMailWithSmtp(mailOptions, label);
 };
 
 module.exports = {
   getEmailConfigStatus,
   getFromAddress,
   getFromHeader,
-  sendMailWithFallback,
+  sendEmail,
+  sendMailWithFallback: sendEmail,
 };

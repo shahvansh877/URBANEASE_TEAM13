@@ -127,9 +127,10 @@ Render free web services block outbound SMTP traffic on ports `25`, `465`, and `
 For Render free services, use an email provider with an HTTPS API such as Brevo. Add these backend environment variables in Render:
 
 ```env
-EMAIL_PROVIDER=brevo
+EMAIL_PROVIDER=brevo_api
 BREVO_API_KEY=your_brevo_api_key
-EMAIL_FROM=UrbanEase <your_verified_sender@yourdomain.com>
+EMAIL_FROM_NAME=UrbanEase
+EMAIL_FROM_EMAIL=your_verified_sender@yourdomain.com
 ```
 
 If you upgrade the Render backend to a paid instance, you can keep using SMTP instead:
