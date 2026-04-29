@@ -1,2 +1,0 @@
-now big part 
-i want this application to be mobile freindlymeans irrespective of the device i use it keep the ui same and it should be working on evey device means when i open this in chorem in mobile view there are some component wich lags and come over each other and also one two component which doesnot move but rest move make ir such a way that it is useable for whole device mobile tablet ios mac latop every device but 
