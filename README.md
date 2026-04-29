@@ -136,11 +136,11 @@ If you upgrade the Render backend to a paid instance, you can keep using SMTP in
 
 ```env
 EMAIL_PROVIDER=smtp
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_gmail_app_password
-EMAIL_FROM=your_email@gmail.com
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USER=your_brevo_smtp_login
+SMTP_PASS=your_brevo_smtp_key
+EMAIL_FROM=UrbanEase <your_verified_sender@yourdomain.com>
 ```
 
 ## Install Dependencies

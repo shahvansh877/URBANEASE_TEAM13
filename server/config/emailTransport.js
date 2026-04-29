@@ -1,13 +1,14 @@
 const nodemailer = require("nodemailer");
 
-const SMTP_HOST = process.env.EMAIL_HOST?.trim() || "smtp.gmail.com";
-const configuredPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : null;
+const SMTP_HOST = (process.env.SMTP_HOST || process.env.EMAIL_HOST)?.trim() || "smtp.gmail.com";
+const configuredPortValue = process.env.SMTP_PORT || process.env.EMAIL_PORT;
+const configuredPort = configuredPortValue ? Number(configuredPortValue) : null;
 const smtpPorts = [...new Set([configuredPort, 587, 465].filter(Boolean))];
 const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
-const emailUser = () => process.env.EMAIL_USER?.trim();
-const emailPass = () => process.env.EMAIL_PASS?.replace(/\s/g, "");
+const emailUser = () => (process.env.SMTP_USER || process.env.EMAIL_USER)?.trim();
+const emailPass = () => (process.env.SMTP_PASS || process.env.EMAIL_PASS)?.replace(/\s/g, "");
 const brevoApiKey = () => process.env.BREVO_API_KEY?.trim();
 const getFromAddress = () => process.env.EMAIL_FROM?.trim() || emailUser();
 const getFromHeader = () => {
