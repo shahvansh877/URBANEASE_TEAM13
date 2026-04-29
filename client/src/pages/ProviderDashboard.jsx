@@ -122,7 +122,49 @@ const SHARED_CSS = `
     font-weight: 500;
   }
 
+  .provider-nav-shell {
+    overflow: visible;
+  }
+  .provider-nav-brand,
+  .provider-nav-actions {
+    min-width: 0;
+  }
+  .provider-account-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 2000;
+  }
+
   @media (max-width: 768px) {
+    .provider-nav-shell {
+      height: auto !important;
+      min-height: 60px;
+      padding: 10px 14px !important;
+      align-items: flex-start !important;
+      gap: 10px;
+    }
+    .provider-nav-brand {
+      flex: 1 1 auto;
+      gap: 8px !important;
+    }
+    .provider-nav-brand-title,
+    .provider-account-name {
+      display: none;
+    }
+    .provider-account-button {
+      padding: 5px 8px 5px 5px !important;
+    }
+    .provider-account-menu {
+      position: fixed !important;
+      top: 68px !important;
+      left: 12px !important;
+      right: 12px !important;
+      min-width: 0 !important;
+      width: auto !important;
+      max-width: none !important;
+      z-index: 3000 !important;
+    }
     .ue-stat-card {
       padding: 16px 14px;
     }
@@ -174,7 +216,7 @@ function DashboardNav({ user, onLogout, onProfile, onHome }) {
   const firstName = user?.name?.split(" ")[0] || "Account";
 
   return (
-    <nav style={{
+    <nav className="provider-nav-shell" style={{
       background: "rgba(7,20,50,0.7)",
       borderBottom: "1px solid rgba(255,255,255,0.08)",
       padding: "0 24px",
@@ -184,9 +226,11 @@ function DashboardNav({ user, onLogout, onProfile, onHome }) {
       justifyContent: "space-between",
       position: "sticky",
       top: 0,
-      zIndex: 100,
+      zIndex: 1000,
+      overflow: "visible",
     }}>
       <div
+        className="provider-nav-brand"
         onClick={onHome}
         style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
       >
@@ -194,11 +238,12 @@ function DashboardNav({ user, onLogout, onProfile, onHome }) {
         <div style={{ width: 32, height: 32, borderRadius: 9, background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <span style={{ fontFamily: T.serif, color: "white", fontWeight: 700, fontSize: "1rem" }}>U</span>
         </div>
-        <span style={{ fontFamily: T.serif, fontWeight: 700, fontSize: "1.1rem", color: "white" }}>UrbanEase</span>
+        <span className="provider-nav-brand-title" style={{ fontFamily: T.serif, fontWeight: 700, fontSize: "1.1rem", color: "white" }}>UrbanEase</span>
       </div>
 
-      <div ref={dropdownRef} style={{ marginLeft: "auto", position: "relative" }}>
+      <div className="provider-nav-actions" ref={dropdownRef} style={{ marginLeft: "auto", position: "relative" }}>
         <button
+          className="provider-account-button"
           onClick={() => setDropdownOpen(v => !v)}
           style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -214,16 +259,16 @@ function DashboardNav({ user, onLogout, onProfile, onHome }) {
           <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#60a5fa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 700, color: "white", flexShrink: 0 }}>
             {firstName[0]?.toUpperCase()}
           </div>
-          <span style={{ fontSize: "0.82rem", fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>{firstName}</span>
+          <span className="provider-account-name" style={{ fontSize: "0.82rem", fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>{firstName}</span>
           <ChevronDown style={{ width: 13, height: 13, color: "rgba(255,255,255,0.5)", transform: dropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
         </button>
 
         {dropdownOpen && (
-          <div style={{
+          <div className="provider-account-menu" style={{
             position: "absolute", right: 0, top: "calc(100% + 8px)",
             background: "white", borderRadius: 14, minWidth: 180,
             boxShadow: "0 8px 32px rgba(0,0,0,0.15)", border: "1px solid #f1f5f9",
-            overflow: "hidden", zIndex: 200,
+            overflow: "hidden", zIndex: 2000,
           }}>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid #f8fafc", background: "#fafbff" }}>
               <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#0f172a" }}>{user?.name}</div>

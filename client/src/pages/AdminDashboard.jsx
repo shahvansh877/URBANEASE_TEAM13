@@ -184,7 +184,62 @@ const SHARED_CSS = `
 
   .panel-enter { animation: ue-slide-in 0.2s ease both; }
 
+  .admin-nav-shell {
+    overflow: visible;
+  }
+  .admin-nav-brand,
+  .admin-nav-actions {
+    min-width: 0;
+  }
+  .admin-account-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 2000;
+  }
+
   @media (max-width: 768px) {
+    .admin-nav-shell {
+      height: auto !important;
+      min-height: 60px;
+      padding: 10px 14px !important;
+      align-items: flex-start !important;
+      gap: 10px;
+    }
+    .admin-nav-brand {
+      flex: 1 1 auto;
+      gap: 8px !important;
+    }
+    .admin-nav-brand-title {
+      font-size: 0.98rem !important;
+    }
+    .admin-nav-actions {
+      margin-left: auto;
+      gap: 6px !important;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .admin-nav-action-label,
+    .admin-account-name,
+    .admin-nav-badge {
+      display: none;
+    }
+    .admin-nav-button {
+      padding: 7px 10px !important;
+    }
+    .admin-account-button {
+      padding: 5px 8px 5px 5px !important;
+    }
+    .admin-account-menu {
+      position: fixed !important;
+      top: 68px !important;
+      left: 12px !important;
+      right: 12px !important;
+      min-width: 0 !important;
+      width: auto !important;
+      max-width: none !important;
+      z-index: 3000 !important;
+    }
     .mode-toggle {
       width: 100%;
       overflow-x: auto;
@@ -246,7 +301,7 @@ function DashboardNav({ user, onLogout, onProfile, onGoHome, onQueries }) {
   const firstName = user?.name?.split(" ")[0] || "Account";
 
   return (
-    <nav style={{
+    <nav className="admin-nav-shell" style={{
       background: "rgba(7,20,50,0.85)",
       backdropFilter: "blur(12px)",
       borderBottom: "1px solid rgba(255,255,255,0.08)",
@@ -257,19 +312,20 @@ function DashboardNav({ user, onLogout, onProfile, onGoHome, onQueries }) {
       justifyContent: "space-between",
       position: "sticky",
       top: 0,
-      zIndex: 100,
+      zIndex: 1000,
     }}>
-      <div onClick={onGoHome} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+      <div className="admin-nav-brand" onClick={onGoHome} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
         <ArrowLeft style={{ width: 15, height: 15, color: "rgba(255,255,255,0.6)" }} />
         <div style={{ width: 32, height: 32, borderRadius: 9, background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <span style={{ fontFamily: T.serif, color: "white", fontWeight: 700, fontSize: "1rem" }}>U</span>
         </div>
-        <span style={{ fontFamily: T.serif, fontWeight: 700, fontSize: "1.1rem", color: "white" }}>UrbanEase</span>
-        <span style={{ fontSize: "0.68rem", fontWeight: 600, background: "rgba(37,99,235,0.3)", color: "#93c5fd", borderRadius: 6, padding: "2px 8px", border: "1px solid rgba(37,99,235,0.4)" }}>ADMIN</span>
+        <span className="admin-nav-brand-title" style={{ fontFamily: T.serif, fontWeight: 700, fontSize: "1.1rem", color: "white" }}>UrbanEase</span>
+        <span className="admin-nav-badge" style={{ fontSize: "0.68rem", fontWeight: 600, background: "rgba(37,99,235,0.3)", color: "#93c5fd", borderRadius: 6, padding: "2px 8px", border: "1px solid rgba(37,99,235,0.4)" }}>ADMIN</span>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div className="admin-nav-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <button
+          className="admin-nav-button"
           onClick={onQueries}
           style={{
             display: "flex", alignItems: "center", gap: 6,
@@ -281,11 +337,12 @@ function DashboardNav({ user, onLogout, onProfile, onGoHome, onQueries }) {
             transition: "all 0.2s",
           }}
         >
-          <Mail style={{ width: 14, height: 14, color: "#93c5fd" }} /> Queries
+          <Mail style={{ width: 14, height: 14, color: "#93c5fd" }} /> <span className="admin-nav-action-label">Queries</span>
         </button>
 
       <div ref={dropdownRef} style={{ position: "relative" }}>
         <button
+          className="admin-account-button"
           onClick={() => setDropdownOpen(v => !v)}
           style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -298,16 +355,16 @@ function DashboardNav({ user, onLogout, onProfile, onGoHome, onQueries }) {
           <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#60a5fa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 700, color: "white" }}>
             {firstName[0]?.toUpperCase()}
           </div>
-          <span style={{ fontSize: "0.82rem", fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>{firstName}</span>
+          <span className="admin-account-name" style={{ fontSize: "0.82rem", fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>{firstName}</span>
           <ChevronDown style={{ width: 13, height: 13, color: "rgba(255,255,255,0.5)", transform: dropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
         </button>
 
         {dropdownOpen && (
-          <div style={{
+          <div className="admin-account-menu" style={{
             position: "absolute", right: 0, top: "calc(100% + 8px)",
             background: "white", borderRadius: 14, minWidth: 180,
             boxShadow: "0 8px 32px rgba(0,0,0,0.15)", border: "1px solid #f1f5f9",
-            overflow: "hidden", zIndex: 200,
+            overflow: "hidden", zIndex: 2000,
           }}>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid #f8fafc", background: "#fafbff" }}>
               <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#0f172a" }}>{user?.name}</div>

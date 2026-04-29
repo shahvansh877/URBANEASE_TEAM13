@@ -31,6 +31,7 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
 
   return (
     <nav
+      className="admin-nav-shell"
       style={{
         background: "rgba(7,20,50,0.85)",
         backdropFilter: "blur(12px)",
@@ -42,10 +43,11 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
         justifyContent: "space-between",
         position: "sticky",
         top: 0,
-        zIndex: 100,
+        zIndex: 1000,
+        overflow: "visible",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div className="admin-nav-brand" style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <button
           onClick={onDashboard}
           style={{
@@ -77,10 +79,11 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
             U
           </span>
         </div>
-        <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: "1.1rem", color: "white" }}>
+        <span className="admin-nav-brand-title" style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: "1.1rem", color: "white" }}>
           UrbanEase
         </span>
         <span
+          className="admin-nav-badge"
           style={{
             fontSize: "0.68rem",
             fontWeight: 600,
@@ -95,8 +98,9 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
         </span>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div className="admin-nav-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <button
+          className="admin-nav-button"
           onClick={onDashboard}
           style={{
             display: "flex",
@@ -112,10 +116,11 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          <Shield style={{ width: 14, height: 14, color: "#93c5fd" }} /> Dashboard
+          <Shield style={{ width: 14, height: 14, color: "#93c5fd" }} /> <span className="admin-nav-action-label">Dashboard</span>
         </button>
 
         <button
+          className="admin-nav-button"
           onClick={onQueries}
           style={{
             display: "flex",
@@ -131,11 +136,12 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          <Mail style={{ width: 14, height: 14, color: "#bfdbfe" }} /> Queries
+          <Mail style={{ width: 14, height: 14, color: "#bfdbfe" }} /> <span className="admin-nav-action-label">Queries</span>
         </button>
 
         <div ref={dropdownRef} style={{ position: "relative" }}>
           <button
+            className="admin-account-button"
             onClick={() => setDropdownOpen((v) => !v)}
             style={{
               display: "flex",
@@ -165,7 +171,7 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
             >
               {(user?.name?.[0] || "A").toUpperCase()}
             </div>
-            <span style={{ fontSize: "0.82rem", fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>
+            <span className="admin-account-name" style={{ fontSize: "0.82rem", fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>
               {user?.name?.split(" ")[0] || "Admin"}
             </span>
             <ChevronDown
@@ -181,6 +187,7 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
 
           {dropdownOpen && (
             <div
+              className="admin-account-menu"
               style={{
                 position: "absolute",
                 right: 0,
@@ -191,7 +198,7 @@ function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
                 boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
                 border: "1px solid #f1f5f9",
                 overflow: "hidden",
-                zIndex: 200,
+                zIndex: 2000,
               }}
             >
               <div style={{ padding: "14px 16px", borderBottom: "1px solid #f8fafc", background: "#fafbff" }}>
@@ -336,7 +343,51 @@ export function AdminQueriesPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         .queries-table { width: 100%; border-collapse: collapse; min-width: 860px; }
+        .admin-nav-shell { overflow: visible; }
+        .admin-nav-brand, .admin-nav-actions { min-width: 0; }
+        .admin-account-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 2000; }
         @media (max-width: 768px) {
+          .admin-nav-shell {
+            height: auto !important;
+            min-height: 60px;
+            padding: 10px 14px !important;
+            align-items: flex-start !important;
+            gap: 10px;
+          }
+          .admin-nav-brand {
+            flex: 1 1 auto;
+            gap: 8px !important;
+          }
+          .admin-nav-brand-title {
+            font-size: 0.98rem !important;
+          }
+          .admin-nav-actions {
+            margin-left: auto;
+            gap: 6px !important;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+          }
+          .admin-nav-action-label,
+          .admin-account-name,
+          .admin-nav-badge {
+            display: none;
+          }
+          .admin-nav-button {
+            padding: 7px 10px !important;
+          }
+          .admin-account-button {
+            padding: 5px 8px 5px 5px !important;
+          }
+          .admin-account-menu {
+            position: fixed !important;
+            top: 68px !important;
+            left: 12px !important;
+            right: 12px !important;
+            min-width: 0 !important;
+            width: auto !important;
+            max-width: none !important;
+            z-index: 3000 !important;
+          }
           .admin-query-actions {
             width: 100%;
           }

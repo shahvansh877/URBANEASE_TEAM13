@@ -86,8 +86,24 @@ export function AdminProfilePage() {
         .quick-link { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; cursor:pointer; border-bottom:1px solid #f1f5f9; transition:background 0.15s; }
         .quick-link:last-child { border-bottom:none; }
         .quick-link:hover { background:#f8fafc; }
-        @media(max-width:768px){ .agrid{ grid-template-columns:1fr !important; } .asgrid{ grid-template-columns:1fr 1fr !important; } }
+        .admin-nav-shell { overflow:visible; }
+        .admin-nav-brand, .admin-nav-actions { min-width:0; }
+        .admin-account-menu { position:absolute; right:0; top:calc(100% + 8px); z-index:2000; }
+        @media(max-width:768px){
+          .admin-nav-shell { height:auto !important; min-height:60px; padding:10px 14px !important; align-items:flex-start !important; gap:10px; }
+          .admin-nav-brand { flex:1 1 auto; gap:8px !important; }
+          .admin-nav-brand-title { font-size:0.98rem !important; }
+          .admin-nav-actions { margin-left:auto; gap:6px !important; flex-wrap:wrap; justify-content:flex-end; }
+          .admin-nav-action-label, .admin-account-name, .admin-nav-badge { display:none; }
+          .admin-nav-button { padding:7px 10px !important; }
+          .admin-account-button { padding:5px 8px 5px 5px !important; }
+          .admin-account-menu { position:fixed !important; top:68px !important; left:12px !important; right:12px !important; min-width:0 !important; width:auto !important; max-width:none !important; z-index:3000 !important; }
+          .agrid{ grid-template-columns:1fr !important; }
+          .asgrid{ grid-template-columns:1fr 1fr !important; }
+          .admin-profile-sidebar { position:static !important; top:auto !important; }
+        }
         @media(max-width:480px){
+          .asgrid { grid-template-columns:1fr !important; }
           .astat-card { padding:14px 12px; }
           .prov-row { padding:14px 12px; }
           .prov-row > div { align-items:flex-start !important; flex-wrap:wrap; }
@@ -96,40 +112,43 @@ export function AdminProfilePage() {
       `}</style>
 
       {/* Navbar */}
-      <nav style={{ background:"linear-gradient(135deg,#0f172a,#1e3a5f)", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+      <nav className="admin-nav-shell" style={{ background:"linear-gradient(135deg,#0f172a,#1e3a5f)", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:1000, overflow:"visible" }}>
+        <div className="admin-nav-brand" style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div style={{ width:30, height:30, borderRadius:8, background:"#2563eb", display:"flex", alignItems:"center", justifyContent:"center" }}>
             <Shield style={{ width:15, height:15, color:"white" }} />
           </div>
-          <span style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"white", fontSize:"1.05rem" }}>UrbanEase</span>
-          <span style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:20, padding:"2px 8px", fontSize:"0.65rem", color:"rgba(255,255,255,0.7)", fontWeight:600 }}>Admin</span>
+          <span className="admin-nav-brand-title" style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"white", fontSize:"1.05rem" }}>UrbanEase</span>
+          <span className="admin-nav-badge" style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:20, padding:"2px 8px", fontSize:"0.65rem", color:"rgba(255,255,255,0.7)", fontWeight:600 }}>Admin</span>
         </div>
 
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+        <div className="admin-nav-actions" style={{ display:"flex", alignItems:"center", gap:10 }}>
           <button onClick={() => navigate("/admin-dashboard")}
+            className="admin-nav-button"
             style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,0.2)", background:"rgba(255,255,255,0.08)", cursor:"pointer", fontSize:"0.82rem", color:"rgba(255,255,255,0.9)", fontFamily:"'DM Sans',sans-serif" }}>
-            <BarChart2 style={{ width:14, height:14, color:"#93c5fd" }} /> Dashboard
+            <BarChart2 style={{ width:14, height:14, color:"#93c5fd" }} /> <span className="admin-nav-action-label">Dashboard</span>
           </button>
 
           <button onClick={() => navigate("/admin-queries")}
+            className="admin-nav-button"
             style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,0.2)", background:"rgba(255,255,255,0.08)", cursor:"pointer", fontSize:"0.82rem", color:"rgba(255,255,255,0.9)", fontFamily:"'DM Sans',sans-serif" }}>
-            <Mail style={{ width:14, height:14, color:"#93c5fd" }} /> Queries
+            <Mail style={{ width:14, height:14, color:"#93c5fd" }} /> <span className="admin-nav-action-label">Queries</span>
           </button>
 
           <div ref={dropdownRef} style={{ position:"relative" }}>
             <button onClick={() => setDropdownOpen(v => !v)}
+              className="admin-account-button"
               style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:24, padding:"5px 12px 5px 6px", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", transition:"all 0.2s" }}
               onMouseOver={e => e.currentTarget.style.background="rgba(255,255,255,0.15)"}
               onMouseOut={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
               <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#2563eb,#60a5fa)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.75rem", fontWeight:700, color:"white", flexShrink:0 }}>
                 {(user?.name?.[0] || "A").toUpperCase()}
               </div>
-              <span style={{ fontSize:"0.82rem", fontWeight:500, color:"rgba(255,255,255,0.9)" }}>{user?.name?.split(" ")[0] || "Admin"}</span>
+              <span className="admin-account-name" style={{ fontSize:"0.82rem", fontWeight:500, color:"rgba(255,255,255,0.9)" }}>{user?.name?.split(" ")[0] || "Admin"}</span>
               <ChevronDown style={{ width:13, height:13, color:"rgba(255,255,255,0.5)", transform: dropdownOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }} />
             </button>
 
             {dropdownOpen && (
-              <div style={{ position:"absolute", right:0, top:"calc(100% + 8px)", background:"white", borderRadius:14, minWidth:180, boxShadow:"0 8px 32px rgba(0,0,0,0.15)", border:"1px solid #f1f5f9", overflow:"hidden", zIndex:200 }}>
+              <div className="admin-account-menu" style={{ position:"absolute", right:0, top:"calc(100% + 8px)", background:"white", borderRadius:14, minWidth:180, boxShadow:"0 8px 32px rgba(0,0,0,0.15)", border:"1px solid #f1f5f9", overflow:"hidden", zIndex:2000 }}>
                 <div style={{ padding:"14px 16px", borderBottom:"1px solid #f8fafc", background:"#fafbff" }}>
                   <div style={{ fontSize:"0.82rem", fontWeight:700, color:"#0f172a" }}>{user?.name}</div>
                   <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginTop:2 }}>{user?.email}</div>
@@ -151,7 +170,7 @@ export function AdminProfilePage() {
         <div className="agrid" style={{ display:"grid", gridTemplateColumns:"300px 1fr", gap:20, alignItems:"start" }}>
 
           {/* LEFT */}
-          <div style={{ position:"sticky", top:80 }}>
+          <div className="admin-profile-sidebar" style={{ position:"sticky", top:80 }}>
 
             {/* Profile card */}
             <div style={{ background:"linear-gradient(145deg,#0f172a 0%,#1e3a5f 60%,#2563eb 100%)", borderRadius:20, padding:"28px 24px", marginBottom:14, color:"white", position:"relative", overflow:"hidden" }}>

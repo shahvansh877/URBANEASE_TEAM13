@@ -200,8 +200,24 @@ export function ProviderProfilePage() {
         .textarea-input { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); border-radius:10px; padding:8px 12px; color:white; font-size:0.82rem; outline:none; width:100%; font-family:'DM Sans',sans-serif; resize:none; box-sizing:border-box; line-height:1.5; }
         .textarea-input:focus { border-color:rgba(255,255,255,0.6); }
         .textarea-input::placeholder { color:rgba(255,255,255,0.45); }
-        @media(max-width:768px){ .pgrid{ grid-template-columns:1fr !important; } .sgrid{ grid-template-columns:1fr 1fr !important; } }
+        .provider-nav-shell { overflow:visible; }
+        .provider-nav-brand, .provider-nav-actions { min-width:0; }
+        .provider-account-menu { position:absolute; right:0; top:calc(100% + 8px); z-index:2000; }
+        @media(max-width:768px){
+          .provider-nav-shell { height:auto !important; min-height:60px; padding:10px 14px !important; align-items:flex-start !important; gap:10px; }
+          .provider-nav-brand { flex:1 1 auto; gap:8px !important; }
+          .provider-nav-brand-title { font-size:0.98rem !important; }
+          .provider-nav-actions { margin-left:auto; gap:6px !important; flex-wrap:wrap; justify-content:flex-end; }
+          .provider-nav-action-label, .provider-account-name, .provider-nav-badge { display:none; }
+          .provider-nav-button { padding:7px 10px !important; }
+          .provider-account-button { padding:5px 8px 5px 5px !important; }
+          .provider-account-menu { position:fixed !important; top:68px !important; left:12px !important; right:12px !important; min-width:0 !important; width:auto !important; max-width:none !important; z-index:3000 !important; }
+          .provider-profile-sidebar { position:static !important; top:auto !important; }
+          .pgrid{ grid-template-columns:1fr !important; }
+          .sgrid{ grid-template-columns:1fr 1fr !important; }
+        }
         @media(max-width:480px){
+          .sgrid { grid-template-columns:1fr !important; }
           .pstat-card { padding:14px 12px; }
           .brow { padding:16px 14px; }
           .brow > div:first-child,
@@ -214,35 +230,37 @@ export function ProviderProfilePage() {
       `}</style>
 
       {/* Navbar */}
-      <nav style={{ background:"linear-gradient(135deg,#0f172a,#1e3a5f)", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+      <nav className="provider-nav-shell" style={{ background:"linear-gradient(135deg,#0f172a,#1e3a5f)", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:1000, overflow:"visible" }}>
+        <div className="provider-nav-brand" style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:30, height:30, borderRadius:8, background:"#2563eb", display:"flex", alignItems:"center", justifyContent:"center" }}>
             <Wrench style={{ width:14, height:14, color:"white" }} />
           </div>
-          <span style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"white", fontSize:"1.05rem" }}>UrbanEase</span>
-          <span style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:20, padding:"2px 8px", fontSize:"0.65rem", color:"rgba(255,255,255,0.7)", fontWeight:600 }}>Provider</span>
+          <span className="provider-nav-brand-title" style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"white", fontSize:"1.05rem" }}>UrbanEase</span>
+          <span className="provider-nav-badge" style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:20, padding:"2px 8px", fontSize:"0.65rem", color:"rgba(255,255,255,0.7)", fontWeight:600 }}>Provider</span>
         </div>
 
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+        <div className="provider-nav-actions" style={{ display:"flex", alignItems:"center", gap:10 }}>
           <button onClick={()=>navigate("/provider-dashboard")}
+            className="provider-nav-button"
             style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,0.2)", background:"rgba(255,255,255,0.08)", cursor:"pointer", fontSize:"0.82rem", color:"rgba(255,255,255,0.9)", fontFamily:"'DM Sans',sans-serif" }}>
-            <BarChart2 style={{ width:14, height:14, color:"#93c5fd" }} /> Dashboard
+            <BarChart2 style={{ width:14, height:14, color:"#93c5fd" }} /> <span className="provider-nav-action-label">Dashboard</span>
           </button>
 
           <div ref={dropdownRef} style={{ position:"relative" }}>
             <button onClick={()=>setDropdownOpen(v=>!v)}
+              className="provider-account-button"
               style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:24, padding:"5px 12px 5px 6px", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", transition:"all 0.2s" }}
               onMouseOver={e=>e.currentTarget.style.background="rgba(255,255,255,0.15)"}
               onMouseOut={e=>e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
               <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#2563eb,#60a5fa)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.75rem", fontWeight:700, color:"white", flexShrink:0 }}>
                 {(user?.name?.[0]||"P").toUpperCase()}
               </div>
-              <span style={{ fontSize:"0.82rem", fontWeight:500, color:"rgba(255,255,255,0.9)" }}>{user?.name?.split(" ")[0]||"Provider"}</span>
+              <span className="provider-account-name" style={{ fontSize:"0.82rem", fontWeight:500, color:"rgba(255,255,255,0.9)" }}>{user?.name?.split(" ")[0]||"Provider"}</span>
               <ChevronDown style={{ width:13, height:13, color:"rgba(255,255,255,0.5)", transform:dropdownOpen?"rotate(180deg)":"none", transition:"transform 0.2s" }} />
             </button>
 
             {dropdownOpen && (
-              <div style={{ position:"absolute", right:0, top:"calc(100% + 8px)", background:"white", borderRadius:14, minWidth:190, boxShadow:"0 8px 32px rgba(0,0,0,0.15)", border:"1px solid #f1f5f9", overflow:"hidden", zIndex:200 }}>
+              <div className="provider-account-menu" style={{ position:"absolute", right:0, top:"calc(100% + 8px)", background:"white", borderRadius:14, minWidth:190, boxShadow:"0 8px 32px rgba(0,0,0,0.15)", border:"1px solid #f1f5f9", overflow:"hidden", zIndex:2000 }}>
                 <div style={{ padding:"14px 16px", borderBottom:"1px solid #f8fafc", background:"#fafbff" }}>
                   <div style={{ fontSize:"0.82rem", fontWeight:700, color:"#0f172a" }}>{user?.name}</div>
                   <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginTop:2 }}>{user?.email}</div>
@@ -264,7 +282,7 @@ export function ProviderProfilePage() {
         <div className="pgrid" style={{ display:"grid", gridTemplateColumns:"310px 1fr", gap:20, alignItems:"start" }}>
 
           {/* LEFT — Profile card */}
-          <div style={{ position:"sticky", top:80 }}>
+          <div className="provider-profile-sidebar" style={{ position:"sticky", top:80 }}>
             <div style={{ background:"linear-gradient(145deg,#1e3a5f 0%,#2563eb 100%)", borderRadius:20, padding:"28px 24px", marginBottom:14, color:"white", position:"relative", overflow:"hidden" }}>
               <div style={{ position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:"rgba(255,255,255,0.05)" }} />
               <div style={{ position:"absolute", bottom:-30, left:-20, width:120, height:120, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }} />
