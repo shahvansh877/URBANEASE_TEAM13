@@ -15,8 +15,11 @@ app.set("realtime", realtime);
 const allowedOrigins = [
   "http://localhost:5173",
   "https://urbannease.netlify.app",
-  process.env.CLIENT_URL
-].filter(Boolean);
+  ...(process.env.CLIENT_URL || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+];
 
 app.use(cors({
   origin: function (origin, callback) {

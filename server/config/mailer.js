@@ -1,16 +1,32 @@
 const nodemailer = require("nodemailer");
 
+const smtpPort = Number(process.env.EMAIL_PORT || 465);
+
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.EMAIL_HOST || "smtp.gmail.com",
+  port: smtpPort,
+  secure: smtpPort === 465,
+  family: 4,
+  pool: true,
+  maxConnections: 2,
+  maxMessages: 100,
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 10000,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    servername: process.env.EMAIL_HOST || "smtp.gmail.com",
+  },
 });
+
+const getFromAddress = () => process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
 const sendOtpEmail = async (toEmail, otp, role = "User") => {
   await transporter.sendMail({
-    from: `"UrbanEase" <${process.env.EMAIL_FROM}>`,
+    from: `"UrbanEase" <${getFromAddress()}>`,
     to: toEmail,
     subject: "UrbanEase – Your OTP Verification Code",
     html: `

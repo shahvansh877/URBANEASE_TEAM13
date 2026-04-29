@@ -63,10 +63,31 @@ const generateOtp = () => {
   return crypto.randomInt(100000, 999999).toString();
 };
 
+const sendOtpWithoutBlockingTooLong = async (email, otp, roleLabel) => {
+  const sendPromise = sendOtpEmail(email, otp, roleLabel);
+  const timeoutPromise = new Promise((resolve) => {
+    setTimeout(() => resolve({ timedOut: true }), 3500);
+  });
+
+  const result = await Promise.race([
+    sendPromise.then(() => ({ sent: true })),
+    timeoutPromise,
+  ]);
+
+  if (result.timedOut) {
+    sendPromise.catch((error) => {
+      console.error(`OTP email failed for ${email}:`, error.message);
+    });
+  }
+
+  return result;
+};
+
 // ── Signup: User (Step 1 — send OTP) ─────────────────────
 router.post("/signup/user", async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, password, phone } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!name || !email || !password)
       return res.status(400).json({ success: false, message: "Name, email and password are required" });
@@ -87,12 +108,13 @@ router.post("/signup/user", async (req, res) => {
       isEmailVerified: false,
     });
 
-    // Send OTP email
-    await sendOtpEmail(email, otp, "User");
+    const emailResult = await sendOtpWithoutBlockingTooLong(email, otp, "User");
 
     res.status(200).json({
       success: true,
-      message: "OTP sent to your email. Please verify to complete registration.",
+      message: emailResult.timedOut
+        ? "OTP is being sent to your email. Please check your inbox in a moment."
+        : "OTP sent to your email. Please verify to complete registration.",
       email,
       role: "user",
     });
@@ -105,7 +127,8 @@ router.post("/signup/user", async (req, res) => {
 // ── Signup: Service Provider (Step 1 — send OTP) ─────────
 router.post("/signup/provider", async (req, res) => {
   try {
-    const { name, email, password, phone, serviceCategory, serviceDescription, address, city, experience } = req.body;
+    const { name, password, phone, serviceCategory, serviceDescription, address, city, experience } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!name || !email || !password || !phone || !serviceCategory || !address || !city)
       return res.status(400).json({ success: false, message: "All fields are required" });
@@ -127,11 +150,13 @@ router.post("/signup/provider", async (req, res) => {
       isEmailVerified: false,
     });
 
-    await sendOtpEmail(email, otp, "Service Provider");
+    const emailResult = await sendOtpWithoutBlockingTooLong(email, otp, "Service Provider");
 
     res.status(200).json({
       success: true,
-      message: "OTP sent to your email. Please verify to complete registration.",
+      message: emailResult.timedOut
+        ? "OTP is being sent to your email. Please check your inbox in a moment."
+        : "OTP sent to your email. Please verify to complete registration.",
       email,
       role: "serviceProvider",
     });
@@ -144,7 +169,8 @@ router.post("/signup/provider", async (req, res) => {
 // ── Verify OTP (Step 2 — complete registration) ──────────
 router.post("/verify-otp", async (req, res) => {
   try {
-    const { email, otp, role } = req.body;
+    const { otp, role } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!email || !otp || !role)
       return res.status(400).json({ success: false, message: "Email, OTP and role are required" });
@@ -208,7 +234,8 @@ router.post("/verify-otp", async (req, res) => {
 // ── Resend OTP ───────────────────────────────────────────
 router.post("/resend-otp", async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { role } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!email || !role)
       return res.status(400).json({ success: false, message: "Email and role are required" });
@@ -232,11 +259,13 @@ router.post("/resend-otp", async (req, res) => {
     await account.save({ validateBeforeSave: false });
 
     const roleLabel = role === "serviceProvider" ? "Service Provider" : "User";
-    await sendOtpEmail(email, otp, roleLabel);
+    const emailResult = await sendOtpWithoutBlockingTooLong(email, otp, roleLabel);
 
     res.status(200).json({
       success: true,
-      message: "New OTP sent to your email.",
+      message: emailResult.timedOut
+        ? "New OTP is being sent to your email. Please check your inbox in a moment."
+        : "New OTP sent to your email.",
     });
   } catch (error) {
     console.error("Resend OTP Error:", error);
@@ -275,7 +304,8 @@ router.post("/signup/admin", async (req, res) => {
 // ── Login (all roles) ─────────────────────────────────────
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!email || !password)
       return res.status(400).json({ success: false, message: "Email and password are required" });
