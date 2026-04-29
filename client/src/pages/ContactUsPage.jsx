@@ -3,8 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut, Mail, Send, User, UserCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { SiteFooter } from "../components/SiteFooter";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../config/api";
 
 export function ContactUsPage() {
   const { user, logout } = useAuth();

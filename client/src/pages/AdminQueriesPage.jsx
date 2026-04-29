@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL as API } from "../config/api";
 import {
   ArrowLeft,
   ChevronDown,
@@ -13,8 +14,6 @@ import {
   Search,
   Shield,
 } from "lucide-react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 function AdminNav({ user, onLogout, onDashboard, onProfile, onQueries }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);

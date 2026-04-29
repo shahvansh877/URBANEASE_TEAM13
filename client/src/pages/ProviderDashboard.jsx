@@ -2,13 +2,12 @@ import { createElement, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isBookingEvent, subscribeRealtime } from "../utils/realtime";
+import { API_BASE_URL as API } from "../config/api";
 import {
   LogOut, Clock, CheckCircle, XCircle, Calendar,
   MapPin, Phone, User, TrendingUp, Star,
   AlertCircle, RefreshCw, ChevronDown, ChevronUp, ArrowLeft
 } from "lucide-react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const STATUS_STYLE = {
   pending:   { bg: "#fef9c3", color: "#92400e", dot: "#f59e0b", label: "Pending"   },

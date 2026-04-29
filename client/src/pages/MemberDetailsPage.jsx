@@ -3,8 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { TeamNavbar } from "../components/TeamNavbar";
 import { teamPageStyles } from "./teamPageStyles";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const SERVER = API.replace(/\/api$/, "");
 
 function getMemberImageUrl(member) {

@@ -5,8 +5,7 @@ import {
   Clock, FileText, ChevronRight, Plus, Minus, Phone, ChevronLeft
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../config/api";
 
 const PRICE_PER_HOUR = {
   Cleaning: 199, Plumbing: 349, Electrical: 399, Carpentry: 449,

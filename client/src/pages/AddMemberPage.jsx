@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TeamNavbar } from "../components/TeamNavbar";
 import { teamPageStyles } from "./teamPageStyles";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../config/api";
 
 const initialForm = {
   name: "",

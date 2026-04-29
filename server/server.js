@@ -45,6 +45,7 @@ app.get("/", (req, res) => {
 // API routes
 app.use("/api/realtime", realtimeRouter);
 app.use("/api/auth", require("./routes/auth"));
+app.use("/auth", require("./routes/auth"));
 app.use("/api/services", require("./routes/services"));
 app.use("/api/bookings", require("./routes/bookings"));
 app.use("/api/payment", require("./routes/payment"));

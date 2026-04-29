@@ -1,13 +1,12 @@
 import { createElement, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL as API } from "../config/api";
 import {
   Mail, Phone, LogOut, Edit2, Check, X, ArrowLeft,
   ChevronRight, ChevronDown, Shield, Users, CheckCircle,
   XCircle, Clock, BarChart2, Settings, Activity
 } from "lucide-react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export function AdminProfilePage() {
   const { user, token, logout, updateUser } = useAuth();

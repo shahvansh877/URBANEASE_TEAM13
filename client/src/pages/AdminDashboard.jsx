@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isAdminRealtimeEvent, subscribeRealtime } from "../utils/realtime";
+import { API_BASE_URL as API } from "../config/api";
 import {
   LogOut, CheckCircle, XCircle, Clock, Users,
   Shield, AlertCircle, ChevronDown, ChevronUp,
@@ -12,8 +13,6 @@ import {
   TrendingUp, Hash, ToggleLeft, ToggleRight,
   Lock, Unlock, MessageSquare, BadgeCheck, Trash2
 } from "lucide-react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const VERIFY_STYLE = {
   pending: { bg: "#fef9c3", color: "#92400e", dot: "#f59e0b", label: "Pending" },

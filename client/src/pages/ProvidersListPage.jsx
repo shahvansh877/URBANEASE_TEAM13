@@ -2,8 +2,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ArrowLeft, Star, MapPin, Briefcase, SlidersHorizontal, Search, Clock } from "lucide-react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL as API } from "../config/api";
 
 const CATEGORY_NAMES = {
   all: "All Services",
