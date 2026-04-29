@@ -124,11 +124,11 @@ Do not share real `.env` secrets publicly.
 
 Render free web services block outbound SMTP traffic on ports `25`, `465`, and `587`. Gmail SMTP uses `465` or `587`, so Nodemailer can time out in production even when it works locally.
 
-For Render free services, use an email provider with an HTTPS API such as Resend. Add these backend environment variables in Render:
+For Render free services, use an email provider with an HTTPS API such as Brevo. Add these backend environment variables in Render:
 
 ```env
-EMAIL_PROVIDER=resend
-RESEND_API_KEY=your_resend_api_key
+EMAIL_PROVIDER=brevo
+BREVO_API_KEY=your_brevo_api_key
 EMAIL_FROM=UrbanEase <your_verified_sender@yourdomain.com>
 ```
 
