@@ -14,7 +14,7 @@ app.set("realtime", realtime);
 // CORS setup
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://urbannease.netlify.app",
+  "https://urbannease.vercel.app",
   ...(process.env.CLIENT_URL || "")
     .split(",")
     .map((origin) => origin.trim())
