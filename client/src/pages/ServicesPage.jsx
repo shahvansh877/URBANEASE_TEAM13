@@ -100,7 +100,7 @@ export function ServicesPage() {
       <nav className="nav-glass fixed top-0 left-0 right-0 z-50">
         <div className="ue-nav-inner max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
+            <div className="ue-brand-icon w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
               <span className="font-display text-white font-bold">U</span>
             </div>
             <span className="font-display text-white font-semibold text-lg">UrbanEase</span>
@@ -115,7 +115,7 @@ export function ServicesPage() {
         </div>
 
         {user ? (
-        <div ref={dropdownRef} className="relative">
+        <div ref={dropdownRef} className="ue-top-account-action relative">
           <button
             onClick={() => setDropdownOpen(o => !o)}
             className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1.5 cursor-pointer text-white"
@@ -152,7 +152,7 @@ export function ServicesPage() {
           )}
         </div>
         ) : (
-          <Link to="/login" className="px-4 py-2 rounded-lg text-white text-sm font-medium border border-white/30 hover:bg-white/10 no-underline">Sign In</Link>
+          <Link to="/login" className="ue-top-account-action px-4 py-2 rounded-lg text-white text-sm font-medium border border-white/30 hover:bg-white/10 no-underline">Sign In</Link>
         )}
         </div>
       </nav>

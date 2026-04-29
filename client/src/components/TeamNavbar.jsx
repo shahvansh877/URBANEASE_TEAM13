@@ -76,7 +76,7 @@ export function TeamNavbar() {
       `}</style>
       <div className="team-nav-inner max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 no-underline">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
+          <div className="ue-brand-icon w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
             <span className="font-display text-white font-bold">U</span>
           </div>
           <span className="font-display text-white font-semibold text-lg">UrbanEase</span>
@@ -90,7 +90,7 @@ export function TeamNavbar() {
           <Link to="/team" className="text-blue-200 hover:text-white text-sm no-underline">Team Detail</Link>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="ue-top-account-action flex items-center gap-3">
           {user ? (
             <div ref={dropdownRef} className="relative">
               <button

@@ -1,13 +1,13 @@
 import { createElement, useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isBookingEvent, subscribeRealtime } from "../utils/realtime";
 import { API_BASE_URL as API } from "../config/api";
 import {
-  User, Mail, Phone, MapPin, Calendar, Clock,
+  Mail, Phone, MapPin, Calendar, Clock,
   LogOut, Edit2, Check, X, Package, ArrowLeft,
   ChevronRight, Sparkles, ChevronDown, Trash2, Star, MessageSquare,
-  HelpCircle, UsersRound
+  HelpCircle, UsersRound, CreditCard, Plus, Save
 } from "lucide-react";
 
 const STATUS_STYLE = {
@@ -22,6 +22,8 @@ const FILTERS = ["all", "upcoming", "completed", "cancelled"];
 export function ProfilePage() {
   const { user, token, logout, updateUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeSection = searchParams.get("section") || "bookings";
 
   const [bookings, setBookings]   = useState([]);
   const [filter, setFilter]       = useState("all");
@@ -32,6 +34,9 @@ export function ProfilePage() {
   const [reviewForms, setReviewForms] = useState({});
   const [savingReview, setSavingReview] = useState("");
   const dropdownRef = useRef(null);
+  const addressStorageKey = `urbanease_addresses_${user?._id || user?.email || "guest"}`;
+  const [addresses, setAddresses] = useState([]);
+  const [addressDraft, setAddressDraft] = useState({ label: "", address: "" });
 
   const [formData, setFormData] = useState({
     name: "", phone: "", address: "",
@@ -61,6 +66,21 @@ export function ProfilePage() {
     if (user) setFormData({ name: user.name || "", phone: user.phone || "", address: user.address || "" });
     fetchBookings();
   }, [user, token]);
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(addressStorageKey) || "[]");
+      setAddresses(Array.isArray(saved) ? saved : []);
+    } catch {
+      setAddresses([]);
+    }
+  }, [addressStorageKey, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    localStorage.setItem(addressStorageKey, JSON.stringify(addresses));
+  }, [addresses, addressStorageKey, user]);
 
   useEffect(() => {
     return subscribeRealtime(token, (event) => {
@@ -217,12 +237,35 @@ export function ProfilePage() {
     { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length,   filter: "cancelled" },
   ];
 
+  const paymentHistory = bookings.filter((booking) => booking.paymentStatus === "paid" || booking.paymentMethod === "cash");
+  const paidPayments = bookings.filter((booking) => booking.paymentStatus === "paid");
+  const totalSpend = paidPayments.reduce((sum, booking) => sum + Number(booking.amount || 0), 0);
+
+  const goSection = (section) => setSearchParams(section === "bookings" ? {} : { section });
+
+  const addAddress = () => {
+    if (!addressDraft.label.trim() || !addressDraft.address.trim()) return;
+    setAddresses((prev) => [
+      ...prev,
+      { id: Date.now().toString(), label: addressDraft.label.trim(), address: addressDraft.address.trim(), editing: false },
+    ].slice(-3));
+    setAddressDraft({ label: "", address: "" });
+  };
+
+  const updateAddress = (id, next) => {
+    setAddresses((prev) => prev.map((item) => item.id === id ? { ...item, ...next } : item));
+  };
+
+  const deleteAddress = (id) => {
+    setAddresses((prev) => prev.filter((item) => item.id !== id));
+  };
+
   const quickNavItems = [
-    { label: "Browse Services", path: "/services", icon: Sparkles },
-    { label: "My Bookings", icon: Package },
+    { label: "My Bookings", icon: Package, section: "bookings" },
+    { label: "Manage Address", icon: MapPin, section: "addresses" },
+    { label: "My Payments", icon: CreditCard, section: "payments" },
     { label: "Help Center", path: "/contact", icon: HelpCircle },
     { label: "Team Detail", path: "/team", icon: UsersRound },
-    { label: "Edit Account", icon: User, action: () => setIsEditing(true) },
     { label: "Logout", icon: LogOut, action: logout, danger: true },
   ];
 
@@ -300,6 +343,7 @@ export function ProfilePage() {
         @media (max-width: 768px) {
           .main-grid { grid-template-columns: 1fr !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
+          .address-entry-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 480px) {
           .nav-top {
@@ -426,6 +470,9 @@ export function ProfilePage() {
                 ) : (
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: "1.15rem", fontWeight: 700, marginBottom: 2 }}>{user?.name}</div>
                 )}
+                <div style={{ fontSize: "0.86rem", fontWeight: 700, opacity: 0.95, marginBottom: 2 }}>
+                  {user?.phone || "Phone number not added"}
+                </div>
                 <div style={{ fontSize: "0.78rem", opacity: 0.7, marginBottom: 16 }}>{user?.email}</div>
 
                 {/* Info fields */}
@@ -493,28 +540,92 @@ export function ProfilePage() {
 
             {/* Quick nav */}
             <div className="profile-quick-nav" style={{ background: "white", borderRadius: 16, border: "1.5px solid #f1f5f9", overflow: "hidden" }}>
-              {quickNavItems.map(({ label, path, icon: Icon, action, danger }, i) => (
+              {quickNavItems.map(({ label, path, icon: Icon, action, danger, section }, i) => (
                 <div key={label}
                   onClick={() => {
                     if (action) action();
+                    if (section) goSection(section);
                     if (path) navigate(path);
                   }}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px 18px", cursor: path || action ? "pointer" : "default", borderBottom: i < quickNavItems.length - 1 ? "1px solid #f1f5f9" : "none", transition: "background 0.15s" }}
-                  onMouseEnter={e => (path || action) && (e.currentTarget.style.background = "#f8fafc")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "white")}>
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px 18px", cursor: path || action || section ? "pointer" : "default", borderBottom: i < quickNavItems.length - 1 ? "1px solid #f1f5f9" : "none", transition: "background 0.15s", background: section === activeSection ? "#eff6ff" : "white" }}
+                  onMouseEnter={e => (path || action || section) && (e.currentTarget.style.background = section === activeSection ? "#eff6ff" : "#f8fafc")}
+                  onMouseLeave={e => (e.currentTarget.style.background = section === activeSection ? "#eff6ff" : "white")}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {createElement(Icon, { style: { width: 17, height: 17, color: danger ? "#ef4444" : "#2563eb" } })}
-                    <span style={{ fontSize: "0.895rem", color: danger ? "#ef4444" : "#374151", fontWeight: 500 }}>{label}</span>
+                    <span style={{ fontSize: "0.895rem", color: danger ? "#ef4444" : section === activeSection ? "#2563eb" : "#374151", fontWeight: section === activeSection ? 700 : 500 }}>{label}</span>
                   </div>
-                  {(path || action) && !danger && <ChevronRight style={{ width: 15, height: 15, color: "#94a3b8" }} />}
+                  {(path || action || section) && !danger && <ChevronRight style={{ width: 15, height: 15, color: section === activeSection ? "#2563eb" : "#94a3b8" }} />}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── RIGHT: Bookings ── */}
+          {/* ── RIGHT: Account sections ── */}
           <div>
+            {activeSection === "addresses" ? (
+              <div style={{ background: "white", borderRadius: 16, border: "1.5px solid #f1f5f9", padding: 20 }}>
+                <h2 style={{ margin: 0, fontFamily: "'Fraunces', serif", fontSize: "1.25rem", fontWeight: 700, color: "#0f172a" }}>Manage Address</h2>
+                <p style={{ margin: "6px 0 18px", color: "#64748b", fontSize: "0.9rem" }}>Save up to 3 addresses and edit them whenever your service location changes.</p>
 
+                <div className="address-entry-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 160px) 1fr auto", gap: 10, alignItems: "center", marginBottom: 18 }}>
+                  <input value={addressDraft.label} onChange={(e) => setAddressDraft((prev) => ({ ...prev, label: e.target.value }))} placeholder="Home / Work" style={{ border: "1.5px solid #e2e8f0", borderRadius: 12, padding: "11px 12px", outline: "none" }} />
+                  <input value={addressDraft.address} onChange={(e) => setAddressDraft((prev) => ({ ...prev, address: e.target.value }))} placeholder="Full address with nearby location" style={{ border: "1.5px solid #e2e8f0", borderRadius: 12, padding: "11px 12px", outline: "none" }} />
+                  <button type="button" onClick={addAddress} disabled={addresses.length >= 3} style={{ display: "flex", alignItems: "center", gap: 6, border: "none", borderRadius: 12, padding: "11px 14px", background: addresses.length >= 3 ? "#cbd5e1" : "#2563eb", color: "white", fontWeight: 700, cursor: addresses.length >= 3 ? "not-allowed" : "pointer" }}>
+                    <Plus style={{ width: 16, height: 16 }} /> Add
+                  </button>
+                </div>
+
+                <div style={{ display: "grid", gap: 10 }}>
+                  {addresses.length === 0 ? (
+                    <div style={{ padding: "28px 18px", borderRadius: 14, background: "#f8fafc", color: "#64748b", textAlign: "center" }}>No saved addresses yet.</div>
+                  ) : addresses.map((item) => (
+                    <div key={item.id} style={{ border: "1.5px solid #e2e8f0", borderRadius: 14, padding: 14 }}>
+                      {item.editing ? (
+                        <div style={{ display: "grid", gap: 10 }}>
+                          <input value={item.label} onChange={(e) => updateAddress(item.id, { label: e.target.value })} style={{ border: "1.5px solid #e2e8f0", borderRadius: 10, padding: 10 }} />
+                          <input value={item.address} onChange={(e) => updateAddress(item.id, { address: e.target.value })} style={{ border: "1.5px solid #e2e8f0", borderRadius: 10, padding: 10 }} />
+                          <button onClick={() => updateAddress(item.id, { editing: false })} style={{ justifySelf: "start", display: "flex", alignItems: "center", gap: 6, border: "none", borderRadius: 10, background: "#2563eb", color: "white", padding: "9px 12px", fontWeight: 700 }}>
+                            <Save style={{ width: 15, height: 15 }} /> Save
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                          <div>
+                            <div style={{ fontWeight: 800, color: "#0f172a", marginBottom: 4 }}>{item.label}</div>
+                            <div style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: 1.55 }}>{item.address}</div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button onClick={() => updateAddress(item.id, { editing: true })} style={{ border: "1px solid #bfdbfe", background: "#eff6ff", color: "#2563eb", borderRadius: 9, padding: 8, cursor: "pointer" }}><Edit2 style={{ width: 15, height: 15 }} /></button>
+                            <button onClick={() => deleteAddress(item.id)} style={{ border: "1px solid #fecaca", background: "#fee2e2", color: "#dc2626", borderRadius: 9, padding: 8, cursor: "pointer" }}><Trash2 style={{ width: 15, height: 15 }} /></button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : activeSection === "payments" ? (
+              <div>
+                <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+                  <div className="stat-card" style={{ background: "white" }}><div style={{ fontFamily: "'Fraunces', serif", fontSize: "1.6rem", fontWeight: 700, color: "#2563eb" }}>₹{totalSpend}</div><div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: 4, fontWeight: 600 }}>Total Spend</div></div>
+                  <div className="stat-card" style={{ background: "white" }}><div style={{ fontFamily: "'Fraunces', serif", fontSize: "1.6rem", fontWeight: 700, color: "#0f172a" }}>{paidPayments.length}</div><div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: 4, fontWeight: 600 }}>Paid Payments</div></div>
+                  <div className="stat-card" style={{ background: "white" }}><div style={{ fontFamily: "'Fraunces', serif", fontSize: "1.6rem", fontWeight: 700, color: "#0f172a" }}>{paymentHistory.length}</div><div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: 4, fontWeight: 600 }}>History Items</div></div>
+                </div>
+                <div style={{ background: "white", borderRadius: 16, border: "1.5px solid #f1f5f9", padding: 20 }}>
+                  <h2 style={{ margin: "0 0 14px", fontFamily: "'Fraunces', serif", fontSize: "1.2rem", fontWeight: 700, color: "#0f172a" }}>Payment History</h2>
+                  {paymentHistory.length === 0 ? (
+                    <div style={{ padding: "36px 18px", background: "#f8fafc", borderRadius: 14, color: "#64748b", textAlign: "center" }}>No payments found yet.</div>
+                  ) : paymentHistory.map((b) => (
+                    <div key={b._id} style={{ display: "flex", justifyContent: "space-between", gap: 14, padding: "14px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <div><div style={{ fontWeight: 800, color: "#0f172a" }}>{b.serviceCategory}</div><div style={{ color: "#64748b", fontSize: "0.84rem", marginTop: 3 }}>To {b.provider?.name || "Provider"} · {b.date} · {(b.paymentMethod || "payment").toUpperCase()}</div></div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: "#0f172a" }}>₹{b.amount}</div><div style={{ color: b.paymentStatus === "paid" ? "#15803d" : "#92400e", fontSize: "0.74rem", fontWeight: 700 }}>{b.paymentStatus === "paid" ? "Paid" : "Cash Pending"}</div></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+
+            <>
             {/* Stats */}
             <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
               {stats.map(s => (
@@ -690,6 +801,8 @@ export function ProfilePage() {
                   </div>
                 );
               })
+            )}
+            </>
             )}
           </div>
         </div>

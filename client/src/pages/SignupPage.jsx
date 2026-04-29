@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   Mail, Lock, Eye, EyeOff, User, Phone,
@@ -16,6 +16,8 @@ const SERVICE_CATEGORIES = [
 export function SignupPage() {
   const { signupUser, signupProvider, signupAdmin, verifyOtp, resendOtp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
 
   const [role, setRole] = useState("user");
   const [showPassword, setShowPassword] = useState(false);
@@ -155,7 +157,7 @@ export function SignupPage() {
       // Navigate based on role
       setTimeout(() => {
         if (role === "serviceProvider") navigate("/provider-dashboard");
-        else navigate("/");
+        else navigate(redirectTo);
       }, 1500);
     } catch (err) {
       setError(toFriendlyAuthError(err, "We could not verify this code. Please try again."));

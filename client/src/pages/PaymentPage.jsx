@@ -429,7 +429,7 @@ export function PaymentPage() {
         </div>
 
         {/* User dropdown — right side */}
-        <div ref={dropdownRef} style={{ marginLeft: "auto", position: "relative" }}>
+        <div ref={dropdownRef} className="ue-top-account-action" style={{ marginLeft: "auto", position: "relative" }}>
           <button
             onClick={() => setDropdownOpen(o => !o)}
             style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 24, padding: "5px 12px 5px 6px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s" }}

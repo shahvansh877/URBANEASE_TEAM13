@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, KeyRound, RefreshCw } from "lucide-react";
 import { getEmailError, getOtpError, getPasswordError, toFriendlyAuthError } from "../utils/formValidation";
@@ -7,6 +7,8 @@ import { getEmailError, getOtpError, getPasswordError, toFriendlyAuthError } fro
 export function LoginPage() {
   const { login, verifyOtp, resendOtp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -69,7 +71,7 @@ export function LoginPage() {
       const data = await login(form);
       if (data.user.role === "admin") navigate("/admin-dashboard");
       else if (data.user.role === "serviceProvider") navigate("/provider-dashboard");
-      else navigate("/");
+      else navigate(redirectTo);
     } catch (err) {
       if (err.needsVerification) {
         setPendingRole(err.role || "user");
@@ -103,7 +105,7 @@ export function LoginPage() {
       
       setTimeout(() => {
         if (data.user.role === "serviceProvider") navigate("/provider-dashboard");
-        else navigate("/");
+        else navigate(redirectTo);
       }, 1500);
     } catch (err) {
       setError(toFriendlyAuthError(err, "We could not verify this code. Please try again."));

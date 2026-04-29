@@ -510,7 +510,7 @@ export function HomePage() {
       <nav className="nav-glass fixed top-0 left-0 right-0 z-50">
         <div className="ue-nav-inner max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
+            <div className="ue-brand-icon w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600">
               <span className="font-display text-white font-bold">U</span>
             </div>
             <span className="font-display text-white font-semibold text-lg">UrbanEase</span>
@@ -524,7 +524,7 @@ export function HomePage() {
             <Link to="/team" className="text-blue-200 hover:text-white text-sm no-underline">Team Detail</Link>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="ue-top-account-action flex items-center gap-3">
             {user ? (
               <div ref={dropdownRef} className="relative">
                 <button

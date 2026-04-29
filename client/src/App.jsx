@@ -19,6 +19,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { HomePage } from "./pages/HomePage";
 import { ContactUsPage } from "./pages/ContactUsPage";
+import { AccountAccessPage } from "./pages/AccountAccessPage";
 import { TeamPage } from "./pages/TeamPage";
 import { AddMemberPage } from "./pages/AddMemberPage";
 import { ViewMembersPage } from "./pages/ViewMembersPage";
@@ -88,6 +89,7 @@ export default function App() {
       {/* Homepage */}
       <Route path="/" element={<HomePage />} />
       <Route path="/contact" element={<ContactUsPage />} />
+      <Route path="/account" element={<AccountAccessPage />} />
       <Route path="/team" element={<TeamPage />} />
       <Route path="/team/add-member" element={<AddMemberPage />} />
       <Route path="/team/members" element={<ViewMembersPage />} />
