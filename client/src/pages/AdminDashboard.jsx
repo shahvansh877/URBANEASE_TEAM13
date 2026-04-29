@@ -67,8 +67,16 @@ const SHARED_CSS = `
     border: 1.5px solid #f1f5f9;
     transition: all 0.2s;
     animation: ue-fade-in 0.3s ease both;
+    min-width: 0;
+    min-height: 126px;
   }
   .ue-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); transform: translateY(-2px); }
+  .admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
 
   .ue-pill {
     display: inline-flex; align-items: center; gap: 6px;
@@ -250,6 +258,7 @@ const SHARED_CSS = `
     }
     .ue-stat-card {
       padding: 16px 14px;
+      min-height: 114px;
     }
     .ue-pill {
       flex: 1 1 calc(50% - 8px);
@@ -272,8 +281,13 @@ const SHARED_CSS = `
   }
 
   @media (max-width: 480px) {
+    .admin-stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
     .ue-stat-card {
-      padding: 14px 12px;
+      padding: 14px 10px;
+      min-height: 106px;
     }
     .ue-btn {
       flex: 1 1 100%;
@@ -393,11 +407,11 @@ function DashboardNav({ user, onLogout, onProfile, onGoHome, onQueries }) {
 function StatCard({ label, value, icon: Icon, color, bg, delay = 0 }) {
   return (
     <div className="ue-stat-card" style={{ animationDelay: `${delay}ms` }}>
-      <div style={{ width: 38, height: 38, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+      <div style={{ width: 34, height: 34, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
         {createElement(Icon, { style: { width: 18, height: 18, color } })}
       </div>
-      <div style={{ fontFamily: T.serif, fontSize: "1.6rem", fontWeight: 700, color: T.color.text, lineHeight: 1 }}>{value ?? "—"}</div>
-      <div style={{ fontSize: "0.72rem", color: T.color.faint, marginTop: 5, fontWeight: 500 }}>{label}</div>
+      <div style={{ fontFamily: T.serif, fontSize: "clamp(1.35rem, 5vw, 1.6rem)", fontWeight: 700, color: T.color.text, lineHeight: 1 }}>{value ?? "—"}</div>
+      <div style={{ fontSize: "0.7rem", color: T.color.faint, marginTop: 5, fontWeight: 700, lineHeight: 1.25 }}>{label}</div>
     </div>
   );
 }
@@ -575,7 +589,7 @@ function ProvidersPanel({ token }) {
   return (
     <div className="panel-enter">
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 14, marginBottom: 28 }}>
+      <div className="admin-stats-grid">
         <StatCard label="Pending Review" value={analytics.pending} icon={Clock} color="#d97706" bg="#fef9c3" delay={0} />
         <StatCard label="Total Providers" value={analytics.totalProviders} icon={Wrench} color="#2563eb" bg="#eff6ff" delay={60} />
         <StatCard label="Verified" value={analytics.verified} icon={CheckCircle} color="#15803d" bg="#dcfce7" delay={120} />
@@ -842,7 +856,7 @@ function UsersPanel({ token }) {
   return (
     <div className="panel-enter">
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 14, marginBottom: 28 }}>
+      <div className="admin-stats-grid">
         <StatCard label="Total Users" value={analytics.totalUsers} icon={Users} color="#7c3aed" bg="#f5f3ff" delay={0} />
         <StatCard label="Active Users" value={analytics.activeUsers} icon={Activity} color="#15803d" bg="#dcfce7" delay={60} />
         <StatCard label="New This Month" value={analytics.newThisMonth} icon={TrendingUp} color="#0891b2" bg="#ecfeff" delay={120} />

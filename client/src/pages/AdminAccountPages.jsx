@@ -1,6 +1,6 @@
-import { createElement, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BarChart2, ChevronRight, Edit2, Inbox, LogOut, Mail, Save, Shield } from "lucide-react";
+import { ChevronRight, Edit2, LogOut, Mail, Save, Shield } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL as API } from "../config/api";
 
@@ -19,7 +19,6 @@ function AdminShell({ children }) {
         .ue-admin-name { margin: 0 0 8px; font-size: clamp(1.75rem, 5vw, 2.35rem); line-height: 1.08; font-weight: 800; letter-spacing: 0; }
         .ue-admin-email { color: #4b5563; font-size: 1rem; display: flex; align-items: center; gap: 8px; overflow-wrap: anywhere; }
         .ue-admin-badge { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; padding: 6px 11px; border-radius: 999px; background: #eff6ff; color: #2563eb; font-size: 0.78rem; font-weight: 800; }
-        .ue-admin-icon-btn { border: none; background: transparent; color: #111827; padding: 8px; cursor: pointer; display: grid; place-items: center; }
         .ue-admin-row { width: 100%; min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 0 24px; border: none; border-bottom: 1px solid #f1f5f9; background: white; color: #111827; cursor: pointer; text-align: left; }
         .ue-admin-row:last-child { border-bottom: none; }
         .ue-admin-row-label { display: flex; align-items: center; gap: 18px; font-size: 1.02rem; font-weight: 600; }
@@ -106,12 +105,6 @@ export function AdminAccountPages() {
     );
   }
 
-  const menu = [
-    { label: "Dashboard", icon: BarChart2, path: "/admin-dashboard" },
-    { label: "Queries", icon: Inbox, path: "/admin-queries" },
-    { label: "Edit profile", icon: Edit2, path: "/admin-profile/edit" },
-  ];
-
   return (
     <AdminShell>
       <section className="ue-admin-card">
@@ -121,16 +114,11 @@ export function AdminAccountPages() {
             <div className="ue-admin-email"><Mail size={17} />{user?.email || "Email not added"}</div>
             <div className="ue-admin-badge"><Shield size={15} />Administrator</div>
           </div>
-          <button className="ue-admin-icon-btn" onClick={() => navigate("/admin-profile/edit")} aria-label="Edit profile">
-            <Edit2 size={24} />
-          </button>
         </div>
-        {menu.map(({ label, icon, path }) => (
-          <button key={label} className="ue-admin-row" onClick={() => navigate(path)}>
-            <span className="ue-admin-row-label">{createElement(icon, { size: 22 })}{label}</span>
-            <ChevronRight size={22} color="#71717a" />
-          </button>
-        ))}
+        <button className="ue-admin-row" onClick={() => navigate("/admin-profile/edit")}>
+          <span className="ue-admin-row-label"><Edit2 size={22} />Edit profile</span>
+          <ChevronRight size={22} color="#71717a" />
+        </button>
       </section>
       <button className="ue-admin-danger" onClick={logout} style={{ width: "calc(100% - 36px)", margin: "18px 18px 0" }}>
         <LogOut size={17} />
