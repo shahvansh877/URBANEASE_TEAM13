@@ -3,8 +3,10 @@ const nodemailer = require("nodemailer");
 const SMTP_HOST = process.env.EMAIL_HOST || "smtp.gmail.com";
 const configuredPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : null;
 const smtpPorts = [...new Set([configuredPort, 587, 465].filter(Boolean))];
+const emailUser = () => process.env.EMAIL_USER?.trim();
+const emailPass = () => process.env.EMAIL_PASS?.replace(/\s/g, "");
 
-const getFromAddress = () => process.env.EMAIL_FROM || process.env.EMAIL_USER;
+const getFromAddress = () => process.env.EMAIL_FROM?.trim() || emailUser();
 
 const createTransporter = (port) => nodemailer.createTransport({
   host: SMTP_HOST,
@@ -16,8 +18,8 @@ const createTransporter = (port) => nodemailer.createTransport({
   greetingTimeout: 8000,
   socketTimeout: 12000,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: emailUser(),
+    pass: emailPass(),
   },
   tls: {
     servername: SMTP_HOST,
@@ -42,7 +44,7 @@ const buildOtpMail = (toEmail, otp, role) => ({
 });
 
 const sendOtpEmail = async (toEmail, otp, role = "User") => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  if (!emailUser() || !emailPass()) {
     throw new Error("Email service is not configured. EMAIL_USER and EMAIL_PASS are required.");
   }
 
@@ -52,7 +54,8 @@ const sendOtpEmail = async (toEmail, otp, role = "User") => {
   for (const port of smtpPorts) {
     try {
       const transporter = createTransporter(port);
-      await transporter.sendMail(mail);
+      const info = await transporter.sendMail(mail);
+      console.log(`OTP email accepted for ${toEmail} via ${SMTP_HOST}:${port}`, info.messageId || "");
       return;
     } catch (error) {
       lastError = error;

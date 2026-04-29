@@ -247,11 +247,15 @@ router.post("/resend-otp", async (req, res) => {
   }
 });
 
-// Development-only email delivery test
+// Email delivery test. In production, protect it with EMAIL_TEST_KEY.
 router.post("/test-otp-email", async (req, res) => {
   try {
-    if (process.env.NODE_ENV === "production") {
+    if (process.env.NODE_ENV === "production" && !process.env.EMAIL_TEST_KEY) {
       return res.status(404).json({ success: false, message: "Route not found" });
+    }
+
+    if (process.env.EMAIL_TEST_KEY && req.headers["x-email-test-key"] !== process.env.EMAIL_TEST_KEY) {
+      return res.status(403).json({ success: false, message: "Invalid email test key" });
     }
 
     const email = req.body.email?.trim().toLowerCase();
