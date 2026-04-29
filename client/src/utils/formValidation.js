@@ -35,6 +35,15 @@ export function toFriendlyAuthError(error, fallback = "Something went wrong. Ple
   if (message.includes("network") || message.includes("failed to fetch")) {
     return "We could not connect to the server. Please check your internet connection and try again.";
   }
+  if (
+    message.includes("smtp") ||
+    message.includes("mail") ||
+    message.includes("could not be sent") ||
+    message.includes("email service") ||
+    message.includes("not configured")
+  ) {
+    return rawMessage || "The verification email could not be sent right now. Please try again in a few minutes.";
+  }
   if (message.includes("email") && (message.includes("invalid") || message.includes("valid"))) {
     return "Please enter a valid email address.";
   }

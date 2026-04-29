@@ -7,15 +7,34 @@ const AuthContext = createContext(null);
 const API_BASE = API_BASE_URL;
 
 class AuthRequestError extends Error {
-  constructor(data) {
+  constructor(data, status) {
     super(data?.message || "Request failed");
     this.name = "AuthRequestError";
     this.data = data || {};
+    this.status = status;
     this.needsVerification = Boolean(data?.needsVerification);
     this.email = data?.email;
     this.role = data?.role;
   }
 }
+
+const parseAuthResponse = async (res) => {
+  let data = {};
+
+  try {
+    data = await res.json();
+  } catch {
+    data = {
+      success: false,
+      message: res.ok
+        ? "The server returned an empty response."
+        : `Server request failed with status ${res.status}.`,
+    };
+  }
+
+  if (!res.ok || !data.success) throw new AuthRequestError(data, res.status);
+  return data;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -52,8 +71,7 @@ export const AuthProvider = ({ children }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, phone }),
     });
-    const data = await res.json();
-    if (!data.success) throw new AuthRequestError(data);
+    const data = await parseAuthResponse(res);
     // Returns { success, message, email, role } — no token yet
     return data;
   };
@@ -64,8 +82,7 @@ export const AuthProvider = ({ children }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-    const data = await res.json();
-    if (!data.success) throw new AuthRequestError(data);
+    const data = await parseAuthResponse(res);
     return data;
   };
 
@@ -75,8 +92,7 @@ export const AuthProvider = ({ children }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, adminKey }),
     });
-    const data = await res.json();
-    if (!data.success) throw new AuthRequestError(data);
+    const data = await parseAuthResponse(res);
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -89,8 +105,7 @@ export const AuthProvider = ({ children }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp, role }),
     });
-    const data = await res.json();
-    if (!data.success) throw new AuthRequestError(data);
+    const data = await parseAuthResponse(res);
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -103,8 +118,7 @@ export const AuthProvider = ({ children }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, role }),
     });
-    const data = await res.json();
-    if (!data.success) throw new AuthRequestError(data);
+    const data = await parseAuthResponse(res);
     return data;
   };
 
@@ -114,8 +128,7 @@ export const AuthProvider = ({ children }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
-    if (!data.success) throw new AuthRequestError(data);
+    const data = await parseAuthResponse(res);
     setToken(data.token);
     setUser(data.user);
     return data;

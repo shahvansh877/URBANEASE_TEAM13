@@ -82,13 +82,22 @@ router.post("/signup/user", async (req, res) => {
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Create user with unverified status
-    await User.create({
+    const pendingUser = await User.create({
       name, email, password, phone,
       otp, otpExpiresAt,
       isEmailVerified: false,
     });
 
-    await sendOtpEmail(email, otp, "User");
+    try {
+      await sendOtpEmail(email, otp, "User");
+    } catch (mailError) {
+      await User.findByIdAndDelete(pendingUser._id);
+      console.error("Signup User OTP Email Error:", mailError);
+      return res.status(502).json({
+        success: false,
+        message: "Account details are valid, but the OTP email could not be sent right now. Please try again in a few minutes.",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -120,7 +129,7 @@ router.post("/signup/provider", async (req, res) => {
     const otp = generateOtp();
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    await ServiceProvider.create({
+    const pendingProvider = await ServiceProvider.create({
       name, email, password, phone,
       serviceCategory, serviceDescription,
       address, city, experience: experience || 0,
@@ -128,7 +137,16 @@ router.post("/signup/provider", async (req, res) => {
       isEmailVerified: false,
     });
 
-    await sendOtpEmail(email, otp, "Service Provider");
+    try {
+      await sendOtpEmail(email, otp, "Service Provider");
+    } catch (mailError) {
+      await ServiceProvider.findByIdAndDelete(pendingProvider._id);
+      console.error("Signup Provider OTP Email Error:", mailError);
+      return res.status(502).json({
+        success: false,
+        message: "Account details are valid, but the OTP email could not be sent right now. Please try again in a few minutes.",
+      });
+    }
 
     res.status(200).json({
       success: true,
