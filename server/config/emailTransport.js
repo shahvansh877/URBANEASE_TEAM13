@@ -108,9 +108,12 @@ const sendEmail = async (mailOptions, label = "Email") => {
     console.log(`${label} accepted via Brevo API`, body?.messageId || "");
     return body;
   } catch (error) {
-    console.error(`${label} full error:`, JSON.stringify(error?.response?.body || error?.body || error, null, 2));
-    console.error(`${label} status:`, error?.status || error?.response?.status);
-    const brevoMessage = error?.body?.message || error?.response?.body?.message || error.message;
+    console.error(`${label} RAW ERROR:`, error);
+    console.error(`${label} error.response:`, error?.response);
+    console.error(`${label} error.body:`, error?.body);
+    console.error(`${label} error.status:`, error?.status);
+    console.error(`${label} error.response?.data:`, error?.response?.data);
+    const brevoMessage = error?.body?.message || error?.response?.body?.message || error?.response?.data?.message || error.message;
     console.error(`${label} failed via Brevo API:`, brevoMessage);
     throw new Error(brevoMessage || `${label} could not be sent via Brevo API`);
   }
