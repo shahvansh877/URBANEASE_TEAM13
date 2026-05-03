@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Briefcase,
@@ -14,8 +14,10 @@ import {
   Save,
   Star,
   Wrench,
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { isBookingEvent, subscribeRealtime } from "../utils/realtime";
 import { API_BASE_URL as API } from "../config/api";
 
 const filters = ["all", "pending", "confirmed", "completed", "cancelled"];
@@ -74,6 +76,9 @@ function ProviderShell({ children }) {
         .ue-provider-input:focus, .ue-provider-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37,99,235,0.08); }
         .ue-provider-primary { border: none; border-radius: 12px; padding: 12px 15px; background: #2563eb; color: white; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
         .ue-provider-danger { border: none; border-radius: 12px; padding: 12px 15px; background: #ef4444; color: white; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+        .ue-provider-success { border: none; border-radius: 12px; padding: 12px 15px; background: #16a34a; color: white; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+        .ue-provider-action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+        .ue-provider-success:disabled, .ue-provider-danger:disabled, .ue-provider-primary:disabled { opacity: 0.65; cursor: not-allowed; }
         .ue-provider-filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
         .ue-provider-filter { border: 1.5px solid #e2e8f0; background: white; color: #64748b; border-radius: 999px; padding: 8px 14px; text-transform: capitalize; font-weight: 700; cursor: pointer; }
         .ue-provider-filter.active { background: #2563eb; border-color: #2563eb; color: white; }
@@ -121,6 +126,7 @@ export function ProviderAccountPages() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [expandedBooking, setExpandedBooking] = useState("");
+  const [updatingBooking, setUpdatingBooking] = useState("");
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -142,23 +148,28 @@ export function ProviderAccountPages() {
     });
   }, [user]);
 
-  useEffect(() => {
-    const fetchBookings = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${API}/bookings/provider-bookings/list`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setBookings(res.ok && data.success ? data.bookings || [] : []);
-      } catch {
-        setBookings([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBookings();
+  const refreshBookings = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
+    try {
+      const res = await fetch(`${API}/bookings/provider-bookings/list`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setBookings(res.ok && data.success ? data.bookings || [] : []);
+    } catch {
+      setBookings([]);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
   }, [token]);
+
+  useEffect(() => {
+    refreshBookings(true);
+  }, [refreshBookings]);
+
+  useEffect(() => subscribeRealtime(token, (event) => {
+    if (isBookingEvent(event)) refreshBookings();
+  }), [refreshBookings, token]);
 
   const filteredBookings = useMemo(() => bookings.filter((booking) => (
     filter === "all" ? true : booking.status === filter
@@ -166,6 +177,26 @@ export function ProviderAccountPages() {
 
   const completedBookings = bookings.filter((booking) => booking.status === "completed");
   const totalEarnings = completedBookings.reduce((sum, booking) => sum + Number(booking.amount || 0), 0);
+
+  const updateBookingStatus = async (bookingId, status) => {
+    setUpdatingBooking(bookingId);
+    try {
+      const res = await fetch(`${API}/bookings/${bookingId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Unable to update booking");
+      setBookings((prev) => prev.map((booking) => (
+        booking._id === bookingId ? { ...booking, ...(data.booking || {}), status } : booking
+      )));
+    } catch (error) {
+      alert(error.message || "Unable to update booking");
+    } finally {
+      setUpdatingBooking("");
+    }
+  };
 
   const saveProfile = async () => {
     setSaving(true);
@@ -241,6 +272,35 @@ export function ProviderAccountPages() {
                 <strong>₹{booking.amount}</strong>
                 <span style={{ color: booking.paymentStatus === "paid" ? "#15803d" : "#92400e", fontWeight: 800 }}>{booking.paymentStatus === "paid" ? `Paid via ${(booking.paymentMethod || "payment").toUpperCase()}` : "Payment pending"}</span>
               </div>
+                  {booking.status === "pending" && (
+                    <div className="ue-provider-action-row" onClick={(event) => event.stopPropagation()}>
+                      <button
+                        className="ue-provider-success"
+                        disabled={updatingBooking === booking._id}
+                        onClick={() => updateBookingStatus(booking._id, "confirmed")}
+                      >
+                        <CheckCircle size={16} />{updatingBooking === booking._id ? "Updating..." : "Accept Booking"}
+                      </button>
+                      <button
+                        className="ue-provider-danger"
+                        disabled={updatingBooking === booking._id}
+                        onClick={() => updateBookingStatus(booking._id, "cancelled")}
+                      >
+                        <XCircle size={16} />Reject
+                      </button>
+                    </div>
+                  )}
+                  {booking.status === "confirmed" && (
+                    <div className="ue-provider-action-row" onClick={(event) => event.stopPropagation()}>
+                      <button
+                        className="ue-provider-primary"
+                        disabled={updatingBooking === booking._id}
+                        onClick={() => updateBookingStatus(booking._id, "completed")}
+                      >
+                        <CheckCircle size={16} />{updatingBooking === booking._id ? "Updating..." : "Mark Completed"}
+                      </button>
+                    </div>
+                  )}
                   <div className="ue-provider-detail-grid">
                     {[
                       ["Customer", booking.user?.name || "Customer"],

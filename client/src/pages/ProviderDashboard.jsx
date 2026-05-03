@@ -185,9 +185,6 @@ const SHARED_CSS = `
       padding-left: 14px !important;
       padding-right: 14px !important;
     }
-    .provider-dashboard-bookings {
-      display: none !important;
-    }
     .ue-tile-value {
       overflow-wrap: anywhere;
     }
