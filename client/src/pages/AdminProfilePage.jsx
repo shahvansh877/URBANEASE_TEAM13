@@ -27,13 +27,27 @@ export function AdminProfilePage() {
 
     const fetchStats = async () => {
       try {
-        const res  = await fetch(`${API}/auth/admin/pending-providers`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.success) {
-          setStats(prev => ({ ...prev, pending: data.providers?.length || 0 }));
-          setRecentProviders((data.providers || []).slice(0, 4));
+        const headers = { Authorization: `Bearer ${token}` };
+        const [analyticsRes, pendingRes] = await Promise.all([
+          fetch(`${API}/auth/admin/provider-analytics`, { headers }),
+          fetch(`${API}/auth/admin/pending-providers`, { headers }),
+        ]);
+
+        const analyticsData = await analyticsRes.json();
+        const pendingData = await pendingRes.json();
+
+        if (analyticsRes.ok && analyticsData.success) {
+          const analytics = analyticsData.analytics || {};
+          setStats({
+            pending: analytics.pending || 0,
+            approved: analytics.verified || 0,
+            rejected: analytics.rejected || 0,
+            total: analytics.totalProviders || 0,
+          });
+        }
+
+        if (pendingRes.ok && pendingData.success) {
+          setRecentProviders((pendingData.providers || []).slice(0, 4));
         }
       } catch(e) { console.error(e); }
       finally { setLoadingStats(false); }
