@@ -126,12 +126,13 @@ export function AdminProfilePage() {
 
       {/* Navbar */}
       <nav className="admin-nav-shell" style={{ background:"linear-gradient(135deg,#0f172a,#1e3a5f)", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:1000, overflow:"visible" }}>
-        <div className="admin-nav-brand" style={{ display:"flex", alignItems:"center", gap:12 }}>
-          <div style={{ width:30, height:30, borderRadius:8, background:"#2563eb", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <Shield style={{ width:15, height:15, color:"white" }} />
+        <div className="admin-nav-brand" onClick={() => navigate("/admin-dashboard")} style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer" }}>
+          <ArrowLeft style={{ width:15, height:15, color:"rgba(255,255,255,0.85)" }} />
+          <div style={{ width:32, height:32, borderRadius:9, background:"#2563eb", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <span style={{ fontFamily:"'Fraunces',serif", color:"white", fontWeight:700, fontSize:"1rem" }}>U</span>
           </div>
-          <span className="admin-nav-brand-title" style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"white", fontSize:"1.05rem" }}>UrbanEase</span>
-          <span className="admin-nav-badge" style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:20, padding:"2px 8px", fontSize:"0.65rem", color:"rgba(255,255,255,0.7)", fontWeight:600 }}>Admin</span>
+          <span className="admin-nav-brand-title" style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"white", fontSize:"1.1rem" }}>UrbanEase</span>
+          <span className="admin-nav-badge" style={{ fontSize:"0.68rem", fontWeight:600, background:"rgba(37,99,235,0.3)", color:"#93c5fd", borderRadius:6, padding:"2px 8px", border:"1px solid rgba(37,99,235,0.4)" }}>ADMIN</span>
         </div>
 
         <div className="admin-nav-actions" style={{ display:"flex", alignItems:"center", gap:10 }}>
