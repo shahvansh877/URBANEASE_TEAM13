@@ -18,6 +18,12 @@ const STATUS_STYLE = {
 
 const FILTERS = ["all", "pending", "confirmed", "completed"];
 
+const formatCurrency = (amount) => new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+}).format(Number(amount || 0));
+
 export function ProviderProfilePage() {
   const { user, token, logout, updateUser } = useAuth();
   const navigate = useNavigate();
@@ -103,12 +109,14 @@ export function ProviderProfilePage() {
     } catch(err) { alert(err.message); } finally { setSaving(false); }
   };
 
-  const earnings   = bookings.filter(b=>b.status==="completed").reduce((s,b)=>s+(b.amount||0),0);
+  const completedBookings = bookings.filter(b=>b.status==="completed");
+  const earnings   = completedBookings.reduce((s,b)=>s+Number(b.amount||0),0);
+  const recentEarnings = completedBookings.slice(0, 3);
   const statsCards = [
     { label:"Total",     value: bookings.length,                                        icon:Package,     color:"#2563eb", bg:"#eff6ff" },
     { label:"Pending",   value: bookings.filter(b=>b.status==="pending").length,        icon:Clock,       color:"#d97706", bg:"#fef9c3" },
     { label:"Completed", value: bookings.filter(b=>b.status==="completed").length,      icon:CheckCircle, color:"#15803d", bg:"#dcfce7" },
-    { label:"Earnings",  value: `₹${earnings}`,                                        icon:TrendingUp,  color:"#7c3aed", bg:"#ede9fe" },
+    { label:"Earnings",  value: formatCurrency(earnings),                               icon:TrendingUp,  color:"#7c3aed", bg:"#ede9fe" },
   ];
 
   // Unverified screen
@@ -409,19 +417,48 @@ export function ProviderProfilePage() {
 
             {/* Quick links */}
             <div style={{ background:"white", borderRadius:16, border:"1.5px solid #f1f5f9", overflow:"hidden" }}>
-              {[
-                { label:"My Dashboard",      path:"/provider-dashboard", icon:BarChart2 },
-                { label:"My Bookings",       path:null,                  icon:Package  },
-                { label:"My Service Area",   path:null,                  icon:MapPin   },
-              ].map(({ label, path, icon: Icon }) => (
-                <div key={label} className="quick-link" onClick={()=>path&&navigate(path)}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    {createElement(Icon, { style: { width:16, height:16, color:"#2563eb" } })}
-                    <span style={{ fontSize:"0.875rem", color:"#374151", fontWeight:500 }}>{label}</span>
-                  </div>
-                  {path && <ChevronRight style={{ width:15, height:15, color:"#94a3b8" }} />}
+              <div className="quick-link" onClick={()=>navigate("/provider-dashboard")}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <BarChart2 style={{ width:16, height:16, color:"#2563eb" }} />
+                  <span style={{ fontSize:"0.875rem", color:"#374151", fontWeight:500 }}>My Dashboard</span>
                 </div>
-              ))}
+                <ChevronRight style={{ width:15, height:15, color:"#94a3b8" }} />
+              </div>
+            </div>
+
+            {/* Earnings */}
+            <div style={{ background:"white", borderRadius:16, border:"1.5px solid #f1f5f9", marginTop:14, overflow:"hidden" }}>
+              <div style={{ padding:"18px", borderBottom:"1px solid #f1f5f9" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 }}>
+                  <div>
+                    <div style={{ fontFamily:"'Fraunces',serif", fontWeight:700, color:"#0f172a" }}>My Earnings</div>
+                    <div style={{ fontSize:"0.74rem", color:"#94a3b8", marginTop:3 }}>
+                      {completedBookings.length} completed booking{completedBookings.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <div style={{ width:38, height:38, borderRadius:11, background:"#ede9fe", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <TrendingUp style={{ width:18, height:18, color:"#7c3aed" }} />
+                  </div>
+                </div>
+                <div style={{ fontFamily:"'Fraunces',serif", fontSize:"1.9rem", lineHeight:1, fontWeight:700, color:"#0f172a" }}>
+                  {formatCurrency(earnings)}
+                </div>
+                <div style={{ fontSize:"0.72rem", color:"#64748b", marginTop:6, fontWeight:500 }}>Total from completed services</div>
+              </div>
+
+              {recentEarnings.length === 0 ? (
+                <div style={{ padding:"16px 18px", fontSize:"0.82rem", color:"#94a3b8" }}>No completed earnings yet.</div>
+              ) : (
+                recentEarnings.map((booking) => (
+                  <div key={booking._id} style={{ display:"flex", justifyContent:"space-between", gap:12, padding:"13px 18px", borderBottom:"1px solid #f8fafc" }}>
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:"0.82rem", color:"#374151", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{booking.serviceCategory}</div>
+                      <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginTop:3 }}>{booking.date || "Completed"}</div>
+                    </div>
+                    <strong style={{ color:"#15803d", fontSize:"0.84rem", whiteSpace:"nowrap" }}>{formatCurrency(booking.amount)}</strong>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
