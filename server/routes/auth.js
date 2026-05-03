@@ -334,7 +334,11 @@ router.post("/forgot-password", async (req, res) => {
     const { account, role, label } = await findAccountByEmail(email);
 
     if (!account) {
-      return res.status(404).json({ success: false, message: "No account was found with this email address" });
+      return res.status(200).json({
+        success: true,
+        message: "If an UrbanEase account exists for this email, a password reset OTP has been sent.",
+        email,
+      });
     }
 
     if (role !== "admin" && !account.isEmailVerified) {

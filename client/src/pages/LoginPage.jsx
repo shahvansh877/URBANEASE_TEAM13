@@ -181,7 +181,7 @@ export function LoginPage() {
       const data = await requestPasswordReset({ email: resetEmail });
       setResetEmail(data.email || resetEmail);
       setResetStep("otp");
-      setSuccess("OTP sent to your registered email.");
+      setSuccess(data.message || "If this email is registered, a reset OTP has been sent.");
     } catch (err) {
       setError(toFriendlyAuthError(err, "We could not send a reset OTP. Please try again."));
     } finally {
