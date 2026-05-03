@@ -122,6 +122,36 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const requestPasswordReset = async ({ email }) => {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await parseAuthResponse(res);
+    return data;
+  };
+
+  const verifyResetOtp = async ({ email, otp }) => {
+    const res = await fetch(`${API_BASE}/auth/verify-reset-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+    });
+    const data = await parseAuthResponse(res);
+    return data;
+  };
+
+  const resetPassword = async ({ email, otp, password, confirmPassword }) => {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp, password, confirmPassword }),
+    });
+    const data = await parseAuthResponse(res);
+    return data;
+  };
+
   const login = async ({ email, password }) => {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
@@ -154,6 +184,7 @@ export const AuthProvider = ({ children }) => {
       user, token, loading,
       signupUser, signupProvider, signupAdmin,
       verifyOtp, resendOtp,
+      requestPasswordReset, verifyResetOtp, resetPassword,
       login, logout,
       updateUser,
       isAuthenticated, isAdmin, isServiceProvider,

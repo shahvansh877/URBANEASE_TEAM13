@@ -63,6 +63,33 @@ const generateOtp = () => {
   return crypto.randomInt(100000, 999999).toString();
 };
 
+const findAccountByEmail = async (email) => {
+  const [user, provider, admin] = await Promise.all([
+    User.findOne({ email }),
+    ServiceProvider.findOne({ email }),
+    Admin.findOne({ email }),
+  ]);
+
+  if (user) return { account: user, role: "user", label: "User" };
+  if (provider) return { account: provider, role: "serviceProvider", label: "Service Provider" };
+  if (admin) return { account: admin, role: "admin", label: "Admin" };
+
+  return { account: null, role: null, label: null };
+};
+
+const validateResetOtp = (account, otp) => {
+  if (!account.otp || !account.otpExpiresAt) {
+    return "Please request a password reset OTP first.";
+  }
+  if (account.otpExpiresAt < new Date()) {
+    return "OTP has expired. Please request a new one.";
+  }
+  if (account.otp !== otp) {
+    return "Invalid OTP. Please try again.";
+  }
+  return "";
+};
+
 // ── Signup: User (Step 1 — send OTP) ─────────────────────
 router.post("/signup/user", async (req, res) => {
   try {
@@ -291,6 +318,125 @@ router.post("/test-otp-email", async (req, res) => {
     });
   } catch (error) {
     console.error("Test OTP Email Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Request password reset OTP
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const email = req.body.email?.trim().toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const { account, role, label } = await findAccountByEmail(email);
+
+    if (!account) {
+      return res.status(404).json({ success: false, message: "No account was found with this email address" });
+    }
+
+    if (role !== "admin" && !account.isEmailVerified) {
+      return res.status(403).json({ success: false, message: "Please verify your email before resetting your password" });
+    }
+
+    if (!account.isActive) {
+      return res.status(403).json({ success: false, message: "Your account has been deactivated" });
+    }
+
+    const otp = generateOtp();
+    account.otp = otp;
+    account.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await account.save({ validateBeforeSave: false });
+
+    await sendOtpEmail(email, otp, `${label} Password Reset`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset OTP sent to your registered email.",
+      email,
+      role,
+    });
+  } catch (error) {
+    console.error("Forgot Password Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Verify password reset OTP before showing the new password step
+router.post("/verify-reset-otp", async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Email and OTP are required" });
+    }
+
+    const { account, role } = await findAccountByEmail(email);
+
+    if (!account) {
+      return res.status(404).json({ success: false, message: "No account was found with this email address" });
+    }
+
+    const otpError = validateResetOtp(account, otp);
+    if (otpError) {
+      return res.status(400).json({ success: false, message: otpError });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified. You can now set a new password.",
+      email,
+      role,
+    });
+  } catch (error) {
+    console.error("Verify Reset OTP Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Save new password after reset OTP verification
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { otp, password, confirmPassword } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
+
+    if (!email || !otp || !password || !confirmPassword) {
+      return res.status(400).json({ success: false, message: "Email, OTP, password and confirm password are required" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ success: false, message: "Passwords do not match" });
+    }
+
+    const { account } = await findAccountByEmail(email);
+
+    if (!account) {
+      return res.status(404).json({ success: false, message: "No account was found with this email address" });
+    }
+
+    const otpError = validateResetOtp(account, otp);
+    if (otpError) {
+      return res.status(400).json({ success: false, message: otpError });
+    }
+
+    account.password = password;
+    account.otp = null;
+    account.otpExpiresAt = null;
+    await account.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully. Please sign in with your new password.",
+    });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 });

@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, KeyRound, RefreshCw } f
 import { getEmailError, getOtpError, getPasswordError, toFriendlyAuthError } from "../utils/formValidation";
 
 export function LoginPage() {
-  const { login, verifyOtp, resendOtp } = useAuth();
+  const { login, verifyOtp, resendOtp, requestPasswordReset, verifyResetOtp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
@@ -22,6 +22,15 @@ export function LoginPage() {
   const [otp, setOtp] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
   const [pendingRole, setPendingRole] = useState("user");
+
+  const [resetStep, setResetStep] = useState("login");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetOtp, setResetOtp] = useState("");
+  const [resetPasswords, setResetPasswords] = useState({ password: "", confirmPassword: "" });
+  const [resetFieldErrors, setResetFieldErrors] = useState({});
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
+  const isResetFlow = resetStep !== "login";
 
   useEffect(() => {
     let interval;
@@ -134,6 +143,121 @@ export function LoginPage() {
     setShowOtp(true);
     setError("");
     setResendTimer(0); // Allow immediate resend if they just got here
+  };
+
+  const startResetFlow = () => {
+    setResetEmail(form.email);
+    setResetStep("email");
+    setShowOtp(false);
+    setError("");
+    setSuccess("");
+    setFieldErrors({});
+    setResetFieldErrors({});
+  };
+
+  const backToLogin = () => {
+    setResetStep("login");
+    setShowOtp(false);
+    setResetOtp("");
+    setResetPasswords({ password: "", confirmPassword: "" });
+    setResetFieldErrors({});
+    setError("");
+    setSuccess("");
+  };
+
+  const handleRequestReset = async (e) => {
+    e?.preventDefault();
+    const emailError = getEmailError(resetEmail);
+    if (emailError) {
+      setResetFieldErrors({ email: emailError });
+      setError("Please enter your registered email address.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const data = await requestPasswordReset({ email: resetEmail });
+      setResetEmail(data.email || resetEmail);
+      setResetStep("otp");
+      setSuccess("OTP sent to your registered email.");
+    } catch (err) {
+      setError(toFriendlyAuthError(err, "We could not send a reset OTP. Please try again."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyResetOtp = async (e) => {
+    e.preventDefault();
+    const otpError = getOtpError(resetOtp);
+    if (otpError) {
+      setError(otpError);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      await verifyResetOtp({ email: resetEmail, otp: resetOtp });
+      setResetStep("password");
+      setSuccess("OTP verified. Set your new password.");
+    } catch (err) {
+      setError(toFriendlyAuthError(err, "We could not verify this code. Please try again."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPasswordChange = (e) => {
+    const { name, value } = e.target;
+    setResetPasswords((prev) => ({ ...prev, [name]: value }));
+    setResetFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    setError("");
+    setSuccess("");
+  };
+
+  const handleSaveNewPassword = async (e) => {
+    e.preventDefault();
+    const nextErrors = {
+      password: getPasswordError(resetPasswords.password),
+      confirmPassword: !resetPasswords.confirmPassword
+        ? "Please confirm your new password."
+        : resetPasswords.password !== resetPasswords.confirmPassword
+          ? "Passwords do not match."
+          : "",
+    };
+    Object.keys(nextErrors).forEach((key) => {
+      if (!nextErrors[key]) delete nextErrors[key];
+    });
+    setResetFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setError("Please fix the highlighted details before saving.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      await resetPassword({
+        email: resetEmail,
+        otp: resetOtp,
+        password: resetPasswords.password,
+        confirmPassword: resetPasswords.confirmPassword,
+      });
+      setForm((prev) => ({ ...prev, email: resetEmail, password: "" }));
+      setSuccess("Password updated successfully. Please sign in with your new password.");
+      setResetStep("login");
+      setResetOtp("");
+      setResetPasswords({ password: "", confirmPassword: "" });
+    } catch (err) {
+      setError(toFriendlyAuthError(err, "We could not update your password. Please try again."));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -318,6 +442,26 @@ export function LoginPage() {
           line-height: 1.35;
         }
 
+        .ue-login-tools {
+          display: flex;
+          justify-content: flex-end;
+          margin: -8px 0 18px;
+        }
+        .ue-text-btn {
+          background: none;
+          border: none;
+          color: #2563eb;
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.85rem;
+          font-weight: 600;
+          padding: 4px 0;
+        }
+        .ue-text-btn:hover {
+          color: #1d4ed8;
+          text-decoration: underline;
+        }
+
         .ue-eye-btn {
           position: absolute;
           right: 14px;
@@ -428,7 +572,7 @@ export function LoginPage() {
 
       <div className="ue-auth-card">
         {/* Logo + Back */}
-        {!showOtp ? (
+        {!showOtp && !isResetFlow ? (
           <Link to="/" className="ue-back-link ue-animate" aria-label="Back to homepage">
             <div className="ue-back-arrow">
               <ArrowLeft style={{ width: 16, height: 16, color: "#64748b" }} />
@@ -439,7 +583,7 @@ export function LoginPage() {
             <span className="ue-logo-text">UrbanEase</span>
           </Link>
         ) : (
-          <button onClick={() => setShowOtp(false)} className="ue-back-link ue-animate" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          <button onClick={isResetFlow ? backToLogin : () => setShowOtp(false)} className="ue-back-link ue-animate" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             <div className="ue-back-arrow">
               <ArrowLeft style={{ width: 16, height: 16, color: "#64748b" }} />
             </div>
@@ -449,11 +593,27 @@ export function LoginPage() {
 
         {/* Heading */}
         <div className="ue-animate ue-delay-1">
-          <h1 className="ue-auth-title">{showOtp ? "Verify Email" : "Sign in"}</h1>
+          <h1 className="ue-auth-title">
+            {showOtp
+              ? "Verify Email"
+              : resetStep === "email"
+                ? "Reset password"
+                : resetStep === "otp"
+                  ? "Enter OTP"
+                  : resetStep === "password"
+                    ? "New password"
+                    : "Sign in"}
+          </h1>
           <p className="ue-auth-subtitle">
-            {showOtp 
+            {showOtp
               ? `Enter the code sent to ${form.email}`
-              : <>Don't have an account? <Link to="/signup">Create one free</Link></>
+              : resetStep === "email"
+                ? "Enter your registered email address and we will send a reset OTP."
+                : resetStep === "otp"
+                  ? `Enter the code sent to ${resetEmail}`
+                  : resetStep === "password"
+                    ? "Choose a new password for your UrbanEase account."
+                    : <>Don't have an account? <Link to="/signup">Create one free</Link></>
             }
           </p>
         </div>
@@ -471,7 +631,185 @@ export function LoginPage() {
         )}
         {success && <div className="ue-success">{success}</div>}
 
-        {!showOtp ? (
+        {isResetFlow ? (
+          <>
+            {resetStep === "email" && (
+              <form onSubmit={handleRequestReset} className="ue-animate">
+                <div className="ue-field">
+                  <label className="ue-label" htmlFor="reset-email">Registered email</label>
+                  <div className="ue-input-wrap">
+                    <Mail className="ue-input-icon" />
+                    <input
+                      id="reset-email"
+                      type="email"
+                      name="resetEmail"
+                      value={resetEmail}
+                      onChange={(e) => {
+                        setResetEmail(e.target.value);
+                        setResetFieldErrors((prev) => ({ ...prev, email: "" }));
+                        setError("");
+                        setSuccess("");
+                      }}
+                      placeholder="you@example.com"
+                      required
+                      className={`ue-input ${resetFieldErrors.email ? "ue-input-error" : ""}`}
+                      autoComplete="email"
+                      autoFocus
+                      aria-invalid={Boolean(resetFieldErrors.email)}
+                      aria-describedby={resetFieldErrors.email ? "reset-email-error" : undefined}
+                    />
+                  </div>
+                  {resetFieldErrors.email && <div id="reset-email-error" className="ue-field-error">{resetFieldErrors.email}</div>}
+                </div>
+
+                <button type="submit" disabled={loading} className="ue-submit-btn">
+                  {loading ? (
+                    <>
+                      <svg className="ue-spinner" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Sending OTP...
+                    </>
+                  ) : (
+                    <>Send OTP <ArrowRight style={{ width: 16, height: 16 }} /></>
+                  )}
+                </button>
+              </form>
+            )}
+
+            {resetStep === "otp" && (
+              <form onSubmit={handleVerifyResetOtp} className="ue-animate">
+                <div className="ue-field">
+                  <label className="ue-label" htmlFor="reset-otp">Reset OTP</label>
+                  <div className="ue-input-wrap">
+                    <KeyRound className="ue-input-icon" />
+                    <input
+                      id="reset-otp"
+                      type="text"
+                      name="resetOtp"
+                      maxLength={6}
+                      value={resetOtp}
+                      onChange={(e) => {
+                        setResetOtp(e.target.value.replace(/\D/g, ""));
+                        setError("");
+                        setSuccess("");
+                      }}
+                      placeholder="000000"
+                      required
+                      className="ue-input ue-otp-input"
+                      autoComplete="one-time-code"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" disabled={loading} className="ue-submit-btn">
+                  {loading ? (
+                    <>
+                      <svg className="ue-spinner" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Verifying...
+                    </>
+                  ) : (
+                    <>Verify OTP <ArrowRight style={{ width: 16, height: 16 }} /></>
+                  )}
+                </button>
+
+                <div className="ue-resend-container">
+                  <button
+                    type="button"
+                    onClick={handleRequestReset}
+                    disabled={loading}
+                    className="ue-resend-btn"
+                  >
+                    <RefreshCw style={{ width: 14, height: 14 }} /> Resend OTP
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {resetStep === "password" && (
+              <form onSubmit={handleSaveNewPassword} className="ue-animate">
+                <div className="ue-field">
+                  <label className="ue-label" htmlFor="reset-password">New password</label>
+                  <div className="ue-input-wrap">
+                    <Lock className="ue-input-icon" />
+                    <input
+                      id="reset-password"
+                      type={showResetPassword ? "text" : "password"}
+                      name="password"
+                      value={resetPasswords.password}
+                      onChange={handleResetPasswordChange}
+                      placeholder="Enter new password"
+                      required
+                      className={`ue-input ${resetFieldErrors.password ? "ue-input-error" : ""}`}
+                      style={{ paddingRight: 48 }}
+                      autoComplete="new-password"
+                      aria-invalid={Boolean(resetFieldErrors.password)}
+                      aria-describedby={resetFieldErrors.password ? "reset-password-error" : undefined}
+                    />
+                    <button
+                      type="button"
+                      className="ue-eye-btn"
+                      onClick={() => setShowResetPassword(!showResetPassword)}
+                      aria-label={showResetPassword ? "Hide password" : "Show password"}
+                    >
+                      {showResetPassword ? <EyeOff style={{ width: 18, height: 18 }} /> : <Eye style={{ width: 18, height: 18 }} />}
+                    </button>
+                  </div>
+                  {resetFieldErrors.password && <div id="reset-password-error" className="ue-field-error">{resetFieldErrors.password}</div>}
+                </div>
+
+                <div className="ue-field">
+                  <label className="ue-label" htmlFor="reset-confirm-password">Confirm password</label>
+                  <div className="ue-input-wrap">
+                    <Lock className="ue-input-icon" />
+                    <input
+                      id="reset-confirm-password"
+                      type={showResetConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={resetPasswords.confirmPassword}
+                      onChange={handleResetPasswordChange}
+                      placeholder="Confirm new password"
+                      required
+                      className={`ue-input ${resetFieldErrors.confirmPassword ? "ue-input-error" : ""}`}
+                      style={{ paddingRight: 48 }}
+                      autoComplete="new-password"
+                      aria-invalid={Boolean(resetFieldErrors.confirmPassword)}
+                      aria-describedby={resetFieldErrors.confirmPassword ? "reset-confirm-password-error" : undefined}
+                    />
+                    <button
+                      type="button"
+                      className="ue-eye-btn"
+                      onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)}
+                      aria-label={showResetConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showResetConfirmPassword ? <EyeOff style={{ width: 18, height: 18 }} /> : <Eye style={{ width: 18, height: 18 }} />}
+                    </button>
+                  </div>
+                  {resetFieldErrors.confirmPassword && <div id="reset-confirm-password-error" className="ue-field-error">{resetFieldErrors.confirmPassword}</div>}
+                </div>
+
+                <button type="submit" disabled={loading} className="ue-submit-btn">
+                  {loading ? (
+                    <>
+                      <svg className="ue-spinner" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Saving...
+                    </>
+                  ) : (
+                    <>Save Password <ArrowRight style={{ width: 16, height: 16 }} /></>
+                  )}
+                </button>
+              </form>
+            )}
+          </>
+        ) : !showOtp ? (
           <form onSubmit={handleSubmit}>
             {/* Email */}
             <div className="ue-field ue-animate ue-delay-2">
@@ -526,6 +864,12 @@ export function LoginPage() {
                 </button>
               </div>
               {fieldErrors.password && <div id="login-password-error" className="ue-field-error">{fieldErrors.password}</div>}
+            </div>
+
+            <div className="ue-login-tools ue-animate ue-delay-2">
+              <button type="button" className="ue-text-btn" onClick={startResetFlow}>
+                Forgot password?
+              </button>
             </div>
 
             {/* Submit */}
