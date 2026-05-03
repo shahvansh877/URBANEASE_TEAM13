@@ -107,7 +107,6 @@ export function AdminProfilePage() {
           .astat-card { padding:14px 12px; }
           .prov-row { padding:14px 12px; }
           .prov-row > div { align-items:flex-start !important; flex-wrap:wrap; }
-          .cap-grid { grid-template-columns:1fr !important; }
         }
       `}</style>
 
@@ -318,27 +317,6 @@ export function AdminProfilePage() {
                   </div>
                 ))
               )}
-            </div>
-
-            {/* Admin info card */}
-            <div style={{ background:"linear-gradient(135deg,#f8fafc,#eff6ff)", borderRadius:18, padding:24, border:"1.5px solid #dbeafe" }}>
-              <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:"1rem", fontWeight:700, color:"#0f172a", marginBottom:16 }}>Admin Capabilities</h3>
-              <div className="cap-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-                {[
-                  { icon:"✅", label:"Approve Providers",    desc:"Review and verify new service providers"        },
-                  { icon:"❌", label:"Reject Applications",  desc:"Decline with reason and notify provider"        },
-                  { icon:"👥", label:"Manage Users",         desc:"View all registered users on platform"          },
-                  { icon:"📊", label:"Platform Analytics",   desc:"Monitor bookings and service performance"       },
-                  { icon:"🔒", label:"Security Control",     desc:"Manage admin keys and access levels"            },
-                  { icon:"📧", label:"Notifications",        desc:"Send updates to providers and users"            },
-                ].map(({icon,label,desc})=>(
-                  <div key={label} style={{ background:"white", borderRadius:12, padding:"12px 14px", border:"1px solid #e2e8f0" }}>
-                    <div style={{ fontSize:"1rem", marginBottom:6 }}>{icon}</div>
-                    <div style={{ fontWeight:600, fontSize:"0.8rem", color:"#0f172a", marginBottom:3 }}>{label}</div>
-                    <div style={{ fontSize:"0.72rem", color:"#94a3b8", lineHeight:1.4 }}>{desc}</div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>
