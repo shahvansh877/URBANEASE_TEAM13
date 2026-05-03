@@ -241,22 +241,6 @@ export function AdminProfilePage() {
               </div>
             </div>
 
-            {/* Quick links */}
-            <div style={{ background:"white", borderRadius:16, border:"1.5px solid #f1f5f9", overflow:"hidden" }}>
-              {[
-                { label:"Admin Dashboard",    path:"/admin-dashboard",   icon:BarChart2  },
-                { label:"Pending Approvals",  path:"/admin-dashboard",   icon:Clock      },
-                { label:"Platform Settings",  path:null,                 icon:Settings   },
-              ].map(({ label, path, icon: Icon }) => (
-                <div key={label} className="quick-link" onClick={() => path && navigate(path)}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    {createElement(Icon, { style: { width:16, height:16, color:"#2563eb" } })}
-                    <span style={{ fontSize:"0.875rem", color:"#374151", fontWeight:500 }}>{label}</span>
-                  </div>
-                  {path && <ChevronRight style={{ width:15, height:15, color:"#94a3b8" }} />}
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* RIGHT */}
