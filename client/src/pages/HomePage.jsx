@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { SiteFooter } from '../components/SiteFooter';
+import { API_BASE_URL as API } from '../config/api';
 const KB = {
   keywords: {
     about: ["urbanease", "urban ease", "what is urbanease", "about urbanease", "tell me about", "explain urbanease"],
@@ -50,20 +51,6 @@ function getKBAnswer(query) {
   return KB.qa[bestCategory] || KB.qa.default;
 }
 
-const CHATBOT_BACKEND_URL = (
-  import.meta.env.VITE_CHATBOT_URL || "https://urbanease-chatbot.onrender.com"
-).replace(/\/+$/, "");
-
-const CHATBOT_ENDPOINTS = [
-  `${CHATBOT_BACKEND_URL}/chat`,
-  `${CHATBOT_BACKEND_URL}/api/chat`,
-  `${CHATBOT_BACKEND_URL}/ask`,
-  `${CHATBOT_BACKEND_URL}/api/ask`,
-  `${CHATBOT_BACKEND_URL}/predict`,
-  `${CHATBOT_BACKEND_URL}/api/predict`,
-  CHATBOT_BACKEND_URL,
-];
-
 function extractChatbotReply(data) {
   if (typeof data === "string") return data;
   if (!data || typeof data !== "object") return "";
@@ -85,38 +72,22 @@ function extractChatbotReply(data) {
 }
 
 async function askUrbanBot(message) {
-  const payload = {
-    message,
-    question: message,
-    query: message,
-    prompt: message,
-    input: message,
-  };
+  try {
+    const res = await fetch(`${API}/chatbot`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
 
-  for (const endpoint of CHATBOT_ENDPOINTS) {
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const data = await res.json();
+    const reply = extractChatbotReply(data);
 
-      if (!res.ok) continue;
-
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("text/html")) continue;
-      const data = contentType.includes("application/json")
-        ? await res.json()
-        : await res.text();
-      const reply = extractChatbotReply(data);
-
-      if (reply) return reply;
-    } catch {
-      // Try the next common route exposed by the deployed chatbot backend.
-    }
+    if (res.ok && reply) return reply;
+  } catch {
+    // The backend proxy avoids browser CORS issues, but keep a local answer if it is unavailable.
   }
 
-  return "I could not reach the deployed UrbanEase chatbot right now. Please try again in a moment.";
+  return `I could not reach the deployed UrbanEase chatbot right now. Basic answer: ${getKBAnswer(message)}`;
 }
 const steps = [
   {

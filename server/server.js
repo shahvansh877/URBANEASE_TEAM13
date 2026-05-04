@@ -70,6 +70,7 @@ app.use("/api/bookings", require("./routes/bookings"));
 app.use("/api/payment", require("./routes/payment"));
 app.use("/api/contact", require("./routes/contact"));
 app.use("/api/members", require("./routes/members"));
+app.use("/api/chatbot", require("./routes/chatbot"));
 
 // Health check route
 app.get("/api/health", (req, res) => {
