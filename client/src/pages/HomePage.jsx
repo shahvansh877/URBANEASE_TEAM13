@@ -170,6 +170,7 @@ export function HomePage() {
     { id: 1, text: "Hi! I'm UrbanBot. How can I help you with your home services today?", isBot: true }
   ]);
   const [userInput, setUserInput] = useState('');
+  const chatMessagesRef = useRef(null);
 
   useEffect(() => {
     const handleOutside = (e) => {
@@ -180,6 +181,15 @@ export function HomePage() {
     document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
   }, []);
+
+  useEffect(() => {
+    if (!chatMessagesRef.current) return;
+
+    chatMessagesRef.current.scrollTo({
+      top: chatMessagesRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
+  }, [chatMessages]);
 
   const handleSearchClick = () => {
     const query = searchQuery.trim();
@@ -717,7 +727,7 @@ export function HomePage() {
             </div>
           </div>
 
-          <div className="ue-chatbot-messages">
+          <div ref={chatMessagesRef} className="ue-chatbot-messages">
             {chatMessages.map(msg => (
               <div key={msg.id} className={`ue-chat-bubble ${msg.isBot ? 'bot' : 'user'}`}>
                 {msg.text}
