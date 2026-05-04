@@ -191,19 +191,6 @@ export function HomePage() {
     });
   }, [chatMessages]);
 
-  useEffect(() => {
-    const openChatbot = () => setIsChatOpen(true);
-
-    window.addEventListener("urbanease:open-chatbot", openChatbot);
-
-    if (window.sessionStorage.getItem("urbaneaseOpenChatbot") === "true") {
-      window.sessionStorage.removeItem("urbaneaseOpenChatbot");
-      openChatbot();
-    }
-
-    return () => window.removeEventListener("urbanease:open-chatbot", openChatbot);
-  }, []);
-
   const handleSearchClick = () => {
     const query = searchQuery.trim();
     if (!query) {

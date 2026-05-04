@@ -1,11 +1,10 @@
-import { Banknote, BriefcaseBusiness, Headphones, Home, Inbox, LayoutDashboard, MessageCircle, Search, UserRound } from "lucide-react";
+import { Banknote, BriefcaseBusiness, Headphones, Home, Inbox, LayoutDashboard, Search, UserRound } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
   { label: "Home", icon: Home, path: "/", match: ["/"] },
   { label: "Services", icon: Search, path: "/services", match: ["/services", "/providers"] },
-  { label: "Chat", icon: MessageCircle, path: "/", match: [], action: "chatbot" },
   { label: "Help", icon: Headphones, path: "/contact", match: ["/contact"] },
   { label: "Account", icon: UserRound, path: "/account", match: ["/account", "/profile", "/login", "/signup"] },
 ];
@@ -34,17 +33,6 @@ export function MobileBottomNav() {
     : NAV_ITEMS;
 
   const goTo = (item) => {
-    if (item.action === "chatbot") {
-      if (pathname === "/") {
-        window.dispatchEvent(new Event("urbanease:open-chatbot"));
-        return;
-      }
-
-      window.sessionStorage.setItem("urbaneaseOpenChatbot", "true");
-      navigate("/");
-      return;
-    }
-
     if (item.label === "Account" && user?.role === "user") {
       navigate("/profile");
       return;
