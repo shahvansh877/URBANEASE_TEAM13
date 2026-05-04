@@ -50,10 +50,17 @@ function getKBAnswer(query) {
   return KB.qa[bestCategory] || KB.qa.default;
 }
 
-const CHATBOT_BACKEND_URL = "https://urbanease-chatbot.onrender.com";
+const CHATBOT_BACKEND_URL = (
+  import.meta.env.VITE_CHATBOT_URL || "https://urbanease-chatbot.onrender.com"
+).replace(/\/+$/, "");
+
 const CHATBOT_ENDPOINTS = [
   `${CHATBOT_BACKEND_URL}/chat`,
   `${CHATBOT_BACKEND_URL}/api/chat`,
+  `${CHATBOT_BACKEND_URL}/ask`,
+  `${CHATBOT_BACKEND_URL}/api/ask`,
+  `${CHATBOT_BACKEND_URL}/predict`,
+  `${CHATBOT_BACKEND_URL}/api/predict`,
   CHATBOT_BACKEND_URL,
 ];
 
@@ -78,7 +85,13 @@ function extractChatbotReply(data) {
 }
 
 async function askUrbanBot(message) {
-  const payload = { message, question: message, query: message };
+  const payload = {
+    message,
+    question: message,
+    query: message,
+    prompt: message,
+    input: message,
+  };
 
   for (const endpoint of CHATBOT_ENDPOINTS) {
     try {
@@ -103,7 +116,7 @@ async function askUrbanBot(message) {
     }
   }
 
-  return getKBAnswer(message);
+  return "I could not reach the deployed UrbanEase chatbot right now. Please try again in a moment.";
 }
 const steps = [
   {
