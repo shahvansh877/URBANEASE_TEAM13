@@ -1,7 +1,7 @@
 import {
   Search, Calendar, CheckCircle,
   ArrowRight, Star, Shield, Clock, ChevronDown,
-  UserCircle, LogOut, MessageSquare, X, Send, Settings, Globe
+  UserCircle, LogOut, MessageSquare, X, Send
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
@@ -48,6 +48,62 @@ function getKBAnswer(query) {
     }
   }
   return KB.qa[bestCategory] || KB.qa.default;
+}
+
+const CHATBOT_BACKEND_URL = "https://urbanease-chatbot.onrender.com";
+const CHATBOT_ENDPOINTS = [
+  `${CHATBOT_BACKEND_URL}/chat`,
+  `${CHATBOT_BACKEND_URL}/api/chat`,
+  CHATBOT_BACKEND_URL,
+];
+
+function extractChatbotReply(data) {
+  if (typeof data === "string") return data;
+  if (!data || typeof data !== "object") return "";
+
+  const reply =
+    data.reply ||
+    data.response ||
+    data.answer ||
+    data.message ||
+    data.text ||
+    data.output ||
+    data.result;
+
+  if (typeof reply === "string") return reply;
+  if (typeof data.data === "string") return data.data;
+  if (data.data && typeof data.data === "object") return extractChatbotReply(data.data);
+
+  return "";
+}
+
+async function askUrbanBot(message) {
+  const payload = { message, question: message, query: message };
+
+  for (const endpoint of CHATBOT_ENDPOINTS) {
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) continue;
+
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("text/html")) continue;
+      const data = contentType.includes("application/json")
+        ? await res.json()
+        : await res.text();
+      const reply = extractChatbotReply(data);
+
+      if (reply) return reply;
+    } catch {
+      // Try the next common route exposed by the deployed chatbot backend.
+    }
+  }
+
+  return getKBAnswer(message);
 }
 const steps = [
   {
@@ -119,16 +175,10 @@ export function HomePage() {
 
   // Chatbot State
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [backendUrl, setBackendUrl] = useState(() => localStorage.getItem('urbanease_chatbot_url') || 'http://localhost:5000/api/chat');
   const [chatMessages, setChatMessages] = useState([
     { id: 1, text: "Hi! I'm UrbanBot. How can I help you with your home services today?", isBot: true }
   ]);
   const [userInput, setUserInput] = useState('');
-
-  useEffect(() => {
-    localStorage.setItem('urbanease_chatbot_url', backendUrl);
-  }, [backendUrl]);
 
   useEffect(() => {
     const handleOutside = (e) => {
@@ -182,21 +232,25 @@ export function HomePage() {
     navigate('/profile');
   };
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!userInput.trim()) return;
 
     const query = userInput.trim();
-    setChatMessages(prev => [...prev, { id: Date.now(), text: query, isBot: false }]);
+    const thinkingId = Date.now() + 1;
+    setChatMessages(prev => [
+      ...prev,
+      { id: Date.now(), text: query, isBot: false },
+      { id: thinkingId, text: "Thinking...", isBot: true },
+    ]);
     setUserInput('');
 
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        text: getKBAnswer(query),
-        isBot: true,
-      }]);
-    }, 500);
+    const reply = await askUrbanBot(query);
+    setChatMessages(prev =>
+      prev.map(msg =>
+        msg.id === thinkingId ? { ...msg, text: reply } : msg
+      )
+    );
   };
 
   return (
@@ -664,13 +718,6 @@ export function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-1.5 hover:bg-white/10 rounded-lg text-white transition-colors bg-transparent border-none cursor-pointer"
-                title="Bot Configuration"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-              <button
                 onClick={() => setIsChatOpen(false)}
                 className="p-1.5 hover:bg-white/10 rounded-lg text-white transition-colors bg-transparent border-none cursor-pointer"
               >
@@ -680,52 +727,25 @@ export function HomePage() {
           </div>
 
           <div className="ue-chatbot-messages">
-            {showSettings ? (
-              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col gap-4">
-                <div className="flex items-center gap-2 text-blue-600 font-bold text-sm">
-                  <Globe className="w-4 h-4" /> BOT BACKEND CONFIG
-                </div>
-                <p className="text-[11px] text-gray-500">Paste your deployed AI bot URL here to connect.</p>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase">Backend Endpoint</label>
-                  <input
-                    type="text"
-                    value={backendUrl}
-                    onChange={(e) => setBackendUrl(e.target.value)}
-                    placeholder="https://api.yourbot.com/v1"
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="w-full py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors border-none cursor-pointer"
-                >
-                  Save Configuration
-                </button>
+            {chatMessages.map(msg => (
+              <div key={msg.id} className={`ue-chat-bubble ${msg.isBot ? 'bot' : 'user'}`}>
+                {msg.text}
               </div>
-            ) : (
-              chatMessages.map(msg => (
-                <div key={msg.id} className={`ue-chat-bubble ${msg.isBot ? 'bot' : 'user'}`}>
-                  {msg.text}
-                </div>
-              ))
-            )}
+            ))}
           </div>
 
-          {!showSettings && (
-            <form onSubmit={handleSendMessage} className="ue-chat-input-area">
-              <input
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                placeholder="Type a message..."
-                className="ue-chat-input"
-              />
-              <button type="submit" className="ue-chat-send-btn">
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          )}
+          <form onSubmit={handleSendMessage} className="ue-chat-input-area">
+            <input
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Type a message..."
+              className="ue-chat-input"
+            />
+            <button type="submit" className="ue-chat-send-btn">
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
         </div>
       )}
     </div>
