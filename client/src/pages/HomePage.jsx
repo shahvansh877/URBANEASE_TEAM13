@@ -191,6 +191,19 @@ export function HomePage() {
     });
   }, [chatMessages]);
 
+  useEffect(() => {
+    const openChatbot = () => setIsChatOpen(true);
+
+    window.addEventListener("urbanease:open-chatbot", openChatbot);
+
+    if (window.sessionStorage.getItem("urbaneaseOpenChatbot") === "true") {
+      window.sessionStorage.removeItem("urbaneaseOpenChatbot");
+      openChatbot();
+    }
+
+    return () => window.removeEventListener("urbanease:open-chatbot", openChatbot);
+  }, []);
+
   const handleSearchClick = () => {
     const query = searchQuery.trim();
     if (!query) {
@@ -409,7 +422,7 @@ export function HomePage() {
           color: white;
           border: none;
           cursor: pointer;
-          z-index: 1000;
+          z-index: 1300;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -430,7 +443,7 @@ export function HomePage() {
           background: #ffffff;
           border-radius: 24px;
           box-shadow: 0 12px 48px rgba(0,0,0,0.15);
-          z-index: 1000;
+          z-index: 1300;
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -544,16 +557,24 @@ export function HomePage() {
             white-space: nowrap;
             flex-shrink: 0;
           }
+          .ue-chatbot-btn {
+            bottom: calc(94px + env(safe-area-inset-bottom));
+            right: 20px;
+          }
+          .ue-chatbot-window {
+            bottom: 154px;
+            right: 20px;
+          }
         }
         @media (max-width: 480px) {
           .ue-chatbot-window {
             width: calc(100vw - 40px);
             right: 20px;
-            bottom: 90px;
+            bottom: 154px;
             height: 400px;
           }
           .ue-chatbot-btn {
-            bottom: 20px;
+            bottom: calc(94px + env(safe-area-inset-bottom));
             right: 20px;
             width: 50px;
             height: 50px;
