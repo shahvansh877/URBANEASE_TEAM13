@@ -72,19 +72,26 @@ function extractChatbotReply(data) {
 }
 
 async function askUrbanBot(message) {
-  try {
-    const res = await fetch(`${API}/chatbot`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    });
+  const endpoints = [`${API}/chat`, `${API}/chatbot`];
 
-    const data = await res.json();
-    const reply = extractChatbotReply(data);
+  for (const endpoint of endpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
 
-    if (res.ok && reply) return reply;
-  } catch {
-    // The backend proxy avoids browser CORS issues, but keep a local answer if it is unavailable.
+      const contentType = res.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await res.json()
+        : await res.text();
+      const reply = extractChatbotReply(data);
+
+      if (res.ok && reply) return reply;
+    } catch {
+      // The backend proxy avoids browser CORS issues, but keep a local answer if it is unavailable.
+    }
   }
 
   return `I could not reach the deployed UrbanEase chatbot right now. Basic answer: ${getKBAnswer(message)}`;
