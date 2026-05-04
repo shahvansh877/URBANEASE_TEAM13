@@ -73,7 +73,7 @@ function extractChatbotReply(data) {
 
 async function askUrbanBot(message) {
   try {
-    const res = await fetch(`${API}/chatbot`, {
+    const res = await fetch(`${API}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message }),
